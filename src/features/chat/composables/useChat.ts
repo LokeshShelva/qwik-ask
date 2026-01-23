@@ -86,6 +86,22 @@ export function useChat() {
                     historyDb.addMessage(lastMsg.id, currentConversationId.value, 'assistant', lastMsg.content).catch((e) => {
                         console.error('Failed to save assistant message:', e);
                     });
+
+                    // Generate title if this is the first exchange (2 messages: user + assistant)
+                    if (isFirstMessage && messages.value.length === 2) {
+                        const userContent = messages.value[0].content;
+                        const assistantContent = lastMsg.content;
+                        const convId = currentConversationId.value;
+
+                        // Import dynamically to avoid circular dependency issues if any
+                        import('../services/gemini').then(({ generateTitle }) => {
+                            generateTitle(apiKey, userContent, assistantContent).then((title) => {
+                                if (title && convId) {
+                                    historyDb.updateConversationTitle(convId, title).catch(console.error);
+                                }
+                            });
+                        });
+                    }
                 }
             },
             onError: (error) => {

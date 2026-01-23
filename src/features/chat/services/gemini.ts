@@ -4,113 +4,158 @@ const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models
 const MODEL = 'gemini-2.0-flash';
 
 export interface StreamCallbacks {
-  onToken: (token: string) => void;
-  onComplete: () => void;
-  onError: (error: string) => void;
+    onToken: (token: string) => void;
+    onComplete: () => void;
+    onError: (error: string) => void;
 }
 
 function convertToGeminiMessages(messages: Message[]): GeminiMessage[] {
-  return messages.map((msg) => ({
-    role: msg.role === 'user' ? 'user' : 'model',
-    parts: [{ text: msg.content }],
-  }));
+    return messages.map((msg) => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }],
+    }));
 }
 
 export async function streamChat(
-  apiKey: string,
-  messages: Message[],
-  callbacks: StreamCallbacks,
-  systemPrompt?: string
+    apiKey: string,
+    messages: Message[],
+    callbacks: StreamCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
-  if (!apiKey) {
-    callbacks.onError('API key is not configured. Please add your API key in Settings.');
-    return;
-  }
-
-  const url = `${GEMINI_API_BASE}/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
-  const geminiMessages = convertToGeminiMessages(messages);
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: geminiMessages,
-        systemInstruction: systemPrompt ? {
-          parts: [{ text: systemPrompt }]
-        } : undefined,
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 8192,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData?.error?.message || `HTTP error ${response.status}`;
-      callbacks.onError(errorMessage);
-      return;
+    if (!apiKey) {
+        callbacks.onError('API key is not configured. Please add your API key in Settings.');
+        return;
     }
 
-    if (!response.body) {
-      callbacks.onError('No response body received');
-      return;
-    }
+    const url = `${GEMINI_API_BASE}/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const geminiMessages = convertToGeminiMessages(messages);
 
-    while (true) {
-      const { done, value } = await reader.read();
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: geminiMessages,
+                systemInstruction: systemPrompt ? {
+                    parts: [{ text: systemPrompt }]
+                } : undefined,
+                generationConfig: {
+                    temperature: 0.7,
+                    topP: 0.95,
+                    topK: 40,
+                    maxOutputTokens: 8192,
+                },
+            }),
+        });
 
-      if (done) {
-        callbacks.onComplete();
-        break;
-      }
-
-      buffer += decoder.decode(value, { stream: true });
-
-      // Parse SSE events
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr) continue;
-
-          try {
-            const data: GeminiStreamResponse = JSON.parse(jsonStr);
-
-            if (data.error) {
-              callbacks.onError(data.error.message);
-              return;
-            }
-
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              callbacks.onToken(text);
-            }
-          } catch (e) {
-            // Skip malformed JSON
-            console.warn('Failed to parse SSE data:', jsonStr);
-          }
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData?.error?.message || `HTTP error ${response.status}`;
+            callbacks.onError(errorMessage);
+            return;
         }
-      }
+
+        if (!response.body) {
+            callbacks.onError('No response body received');
+            return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+                callbacks.onComplete();
+                break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // Parse SSE events
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const jsonStr = line.slice(6).trim();
+                    if (!jsonStr) continue;
+
+                    try {
+                        const data: GeminiStreamResponse = JSON.parse(jsonStr);
+
+                        if (data.error) {
+                            callbacks.onError(data.error.message);
+                            return;
+                        }
+
+                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text) {
+                            callbacks.onToken(text);
+                        }
+                    } catch (e) {
+                        // Skip malformed JSON
+                        console.warn('Failed to parse SSE data:', jsonStr);
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error occurred';
+        callbacks.onError(message);
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
-    callbacks.onError(message);
-  }
+}
+
+// Non-streaming generation for title
+export async function generateTitle(
+    apiKey: string,
+    userMessage: string,
+    assistantResponse: string
+): Promise<string> {
+    const url = `${GEMINI_API_BASE}/${MODEL}:generateContent?key=${apiKey}`;
+
+    const prompt = `Generate a very short, concise title (3-5 words) for this conversation based on the following exchange.\nUser: ${userMessage}\nAssistant: ${assistantResponse}\nTitle:`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    role: 'user',
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 20,
+                },
+            }),
+        });
+
+        if (!response.ok) {
+            return "";
+        }
+
+        const data = await response.json();
+        let title = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+        // Cleanup if it returns "Title: " prefix
+        title = title.replace(/^Title:\s*/i, '').replace(/["']/g, '');
+
+        return title;
+    } catch (e) {
+        console.error('Failed to generate title:', e);
+        return "";
+    }
 }
 
 export function abortStream(): void {
-  // For future implementation - would need AbortController
+    // For future implementation - would need AbortController
 }

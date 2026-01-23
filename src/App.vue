@@ -9,6 +9,7 @@ import CheckIcon from './components/CheckIcon.vue';
 import ChatMessage from './components/ChatMessage.vue';
 import { useChat } from './composables/useChat';
 import { useSettings } from './composables/useSettings';
+import { applyThemeFromSettings, setupSystemThemeListener } from './composables/useTheme';
 
 const appWindow = getCurrentWindow();
 const inputQuery = ref('');
@@ -23,6 +24,7 @@ const { messages, isStreaming, streamError, hasMessages, sendMessage, resetChat,
 const apiKeyMissing = computed(() => !settings.value?.llm?.api_key);
 
 let unlistenFocus: (() => void) | null = null;
+let unlistenSystemTheme: (() => void) | null = null;
 let isAnimating = false;
 
 const MIN_HEIGHT = 80;
@@ -158,10 +160,21 @@ watch(hasMessages, async (has) => {
 onMounted(async () => {
   await loadSettings();
   
+  // Apply theme from settings and setup system theme listener
+  if (settings.value) {
+    applyThemeFromSettings(settings.value.general.theme);
+    unlistenSystemTheme = setupSystemThemeListener(settings.value.general.theme) || null;
+  }
+  
   document.addEventListener('keydown', handleKeydown);
   
   unlistenFocus = await appWindow.onFocusChanged(async ({ payload: focused }) => {
     if (focused && inputEl.value) {
+      // Reload settings when window gains focus to pick up theme changes from settings window
+      await loadSettings();
+      if (settings.value) {
+        applyThemeFromSettings(settings.value.general.theme);
+      }
       inputEl.value.focus();
     } else {
       resetChat();
@@ -174,6 +187,7 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
   if (unlistenFocus) unlistenFocus();
+  if (unlistenSystemTheme) unlistenSystemTheme();
 });
 </script>
 

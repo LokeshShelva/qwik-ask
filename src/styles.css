@@ -10,8 +10,11 @@
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
-  
-  /* Zinc palette for premium feel */
+}
+
+/* Dark Theme (default) */
+:root,
+[data-theme="dark"] {
   --bg-primary: rgba(24, 24, 27, 0.85);
   --bg-secondary: rgba(39, 39, 42, 0.6);
   --border: rgba(63, 63, 70, 0.5);
@@ -25,6 +28,25 @@
   --warning-bg: rgba(234, 179, 8, 0.15);
   --warning-border: rgba(234, 179, 8, 0.3);
   --warning-text: rgb(250, 204, 21);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg-primary: rgba(255, 255, 255, 0.9);
+  --bg-secondary: rgba(244, 244, 245, 0.8);
+  --border: rgba(228, 228, 231, 0.8);
+  --text-primary: rgb(24, 24, 27);
+  --text-secondary: rgb(82, 82, 91);
+  --text-muted: rgb(113, 113, 122);
+  --accent: rgb(82, 82, 91);
+  --input-bg: rgba(244, 244, 245, 0.6);
+  --input-border: rgba(212, 212, 216, 0.8);
+  --error: rgb(220, 38, 38);
+  --warning-bg: rgba(250, 204, 21, 0.15);
+  --warning-border: rgba(234, 179, 8, 0.4);
+  --warning-text: rgb(161, 98, 7);
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 html,
@@ -43,7 +65,7 @@ body,
   background: var(--bg-primary);
   border-radius: 12px;
   border: 1px solid var(--border);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
 }

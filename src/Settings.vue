@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettings } from './composables/useSettings';
+import { applyThemeFromSettings, setupSystemThemeListener } from './composables/useTheme';
 import type { Theme, LlmProvider } from './types/settings';
 import SettingsIcon from './components/SettingsIcon.vue';
 import KeyboardIcon from './components/KeyboardIcon.vue';
@@ -14,6 +15,7 @@ const settingsWindow = getCurrentWindow();
 const { settings, loading, error, loadSettings, updateSettings } = useSettings();
 
 let unlistenClose: (() => void) | null = null;
+let unlistenSystemTheme: (() => void) | null = null;
 
 // Shortcut recorder modal state
 const showShortcutRecorder = ref(false);
@@ -70,16 +72,27 @@ const handleThemeChange = async (e: Event) => {
   const target = e.target as HTMLSelectElement;
   if (!settings.value) return;
 
+  const newTheme = target.value as Theme;
+  
   const updated = {
     ...settings.value,
     general: {
       ...settings.value.general,
-      theme: target.value as Theme,
+      theme: newTheme,
     },
   };
 
   try {
     await updateSettings(updated);
+    
+    // Apply theme immediately to this window
+    applyThemeFromSettings(newTheme);
+    
+    // Update the system theme listener for the new setting
+    if (unlistenSystemTheme) {
+      unlistenSystemTheme();
+    }
+    unlistenSystemTheme = setupSystemThemeListener(newTheme) || null;
   } catch (err) {
     console.error('Failed to update theme:', err);
   }
@@ -133,6 +146,11 @@ const openSettingsFile = async () => {
 
 onMounted(async () => {
   await loadSettings();
+  
+  // Setup system theme listener after settings are loaded
+  if (settings.value) {
+    unlistenSystemTheme = setupSystemThemeListener(settings.value.general.theme) || null;
+  }
 
   unlistenClose = await settingsWindow.onCloseRequested(async (event) => {
     event.preventDefault();
@@ -142,6 +160,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (unlistenClose) unlistenClose();
+  if (unlistenSystemTheme) unlistenSystemTheme();
 });
 </script>
 

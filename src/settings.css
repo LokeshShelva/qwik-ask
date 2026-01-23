@@ -10,8 +10,11 @@
   font-size: 14px;
   line-height: 1.5;
   font-weight: 400;
-  
-  /* Zinc palette - matching quick panel */
+}
+
+/* Dark Theme (default) */
+:root,
+[data-theme="dark"] {
   --bg-primary: rgba(9, 9, 11, 0.95);
   --bg-secondary: rgba(24, 24, 27, 0.8);
   --bg-tertiary: rgba(39, 39, 42, 0.6);
@@ -25,6 +28,23 @@
   --border-subtle: rgba(63, 63, 70, 0.3);
   --input-bg: rgba(39, 39, 42, 0.5);
   --ring: rgba(250, 250, 250, 0.1);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg-primary: rgb(250, 250, 250);
+  --bg-secondary: rgb(244, 244, 245);
+  --bg-tertiary: rgb(228, 228, 231);
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --text-primary: rgb(24, 24, 27);
+  --text-secondary: rgb(82, 82, 91);
+  --text-muted: rgb(113, 113, 122);
+  --accent: rgb(24, 24, 27);
+  --accent-hover: rgb(39, 39, 42);
+  --border: rgba(228, 228, 231, 1);
+  --border-subtle: rgba(228, 228, 231, 0.6);
+  --input-bg: rgb(255, 255, 255);
+  --ring: rgba(0, 0, 0, 0.05);
 }
 
 html,

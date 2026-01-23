@@ -97,12 +97,14 @@ impl SettingsManager {
         // Get current shortcut and check if it's different
         let mut current = self.current_shortcut.lock().map_err(|e| format!("Lock error: {}", e))?;
         
-        // If we have a current shortcut, unregister it first
-        if let Some(old_shortcut) = current.take() {
-            // Only unregister if it's different from the new one
-            if old_shortcut != new_shortcut {
-                let _ = global_shortcut.unregister(old_shortcut);
+        // Check if the shortcut is the same - if so, no action needed
+        if let Some(ref old_shortcut) = *current {
+            if *old_shortcut == new_shortcut {
+                // Shortcut hasn't changed, nothing to do
+                return Ok(());
             }
+            // Unregister the old shortcut since it's different
+            let _ = global_shortcut.unregister(old_shortcut.clone());
         }
         
         // Register the new shortcut

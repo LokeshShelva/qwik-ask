@@ -1,4 +1,6 @@
 use tauri::Manager;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
 mod commands;
 mod settings;
@@ -69,6 +71,53 @@ pub fn run() {
 
             // Store settings manager in app state
             app.manage(settings_manager);
+
+            // Setup system tray
+            let settings_item = MenuItem::with_id(app, "settings", "Open Settings", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false) // Disable menu on left click so we can handle it
+                .tooltip("Qwik Ask")
+                .on_menu_event(|app, event| {
+                    match event.id.as_ref() {
+                        "settings" => {
+                            if let Some(window) = app.get_webview_window("settings") {
+                                if let Some(main_window) = app.get_webview_window("main") {
+                                    let _ = main_window.hide();
+                                }
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        // Left click opens settings
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("settings") {
+                            if let Some(main_window) = app.get_webview_window("main") {
+                                let _ = main_window.hide();
+                            }
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
 
             Ok(())
         })

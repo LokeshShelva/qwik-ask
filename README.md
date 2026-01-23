@@ -1,4 +1,4 @@
-# QwikAsk - A lazy man's AI assistant 🦥 ✨
+# QwikAsk - A lazy man's AI assistant 
 ![QwikAsk](./.attachments/QwikAsk.gif)
 *(The GIF is choppy because I used Snipping Tool. The app is smooth. Trust me 👀.)*
 

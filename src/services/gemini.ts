@@ -19,7 +19,8 @@ function convertToGeminiMessages(messages: Message[]): GeminiMessage[] {
 export async function streamChat(
   apiKey: string,
   messages: Message[],
-  callbacks: StreamCallbacks
+  callbacks: StreamCallbacks,
+  systemPrompt?: string
 ): Promise<void> {
   if (!apiKey) {
     callbacks.onError('API key is not configured. Please add your API key in Settings.');
@@ -38,6 +39,9 @@ export async function streamChat(
       },
       body: JSON.stringify({
         contents: geminiMessages,
+        systemInstruction: systemPrompt ? {
+          parts: [{ text: systemPrompt }]
+        } : undefined,
         generationConfig: {
           temperature: 0.7,
           topP: 0.95,

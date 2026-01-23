@@ -102,7 +102,11 @@ const handleSubmit = async () => {
     inputEl.value.style.height = 'auto';
   }
   
-  await sendMessage(query, settings.value?.llm?.api_key || '');
+  await sendMessage(
+    query, 
+    settings.value?.llm?.api_key || '',
+    settings.value?.llm?.system_prompt
+  );
 };
 
 const handleKeydown = async (e: KeyboardEvent) => {

@@ -10,9 +10,19 @@ export interface ShortcutSettings {
   toggle_launcher: string;
 }
 
+export const DEFAULT_SYSTEM_PROMPT = `You are Quick Assist, a fast and helpful AI assistant. You provide concise, accurate, and actionable responses.
+
+Guidelines:
+- Be direct and concise - users want quick answers
+- Use markdown formatting for better readability
+- For code, always specify the language in code blocks
+- If a question is ambiguous, give the most likely answer first, then briefly mention alternatives
+- Avoid unnecessary pleasantries - get straight to the point`;
+
 export interface LlmSettings {
   provider: LlmProvider;
   api_key: string;
+  system_prompt: string;
 }
 
 export interface AppSettings {
@@ -32,5 +42,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   llm: {
     provider: 'gemini',
     api_key: '',
+    system_prompt: DEFAULT_SYSTEM_PROMPT,
   },
 };

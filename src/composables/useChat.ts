@@ -18,7 +18,7 @@ export function useChat() {
     return assistantMessages[assistantMessages.length - 1];
   });
 
-  const sendMessage = async (content: string, apiKey: string) => {
+  const sendMessage = async (content: string, apiKey: string, systemPrompt?: string) => {
     if (!content.trim() || isStreaming.value) return;
 
     streamError.value = null;
@@ -67,7 +67,7 @@ export function useChat() {
           }
         }
       },
-    });
+    }, systemPrompt);
   };
 
   const resetChat = () => {

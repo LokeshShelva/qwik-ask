@@ -26,10 +26,25 @@ pub struct ShortcutSettings {
     pub toggle_launcher: String,
 }
 
+pub const DEFAULT_SYSTEM_PROMPT: &str = r#"You are Quick Assist, a fast and helpful AI assistant. You provide concise, accurate, and actionable responses.
+
+Guidelines:
+- Be direct and concise - users want quick answers
+- Use markdown formatting for better readability
+- For code, always specify the language in code blocks
+- If a question is ambiguous, give the most likely answer first, then briefly mention alternatives
+- Avoid unnecessary pleasantries - get straight to the point"#;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmSettings {
     pub provider: LlmProvider,
     pub api_key: String,
+    #[serde(default = "default_system_prompt")]
+    pub system_prompt: String,
+}
+
+fn default_system_prompt() -> String {
+    DEFAULT_SYSTEM_PROMPT.to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,6 +67,7 @@ impl Default for AppSettings {
             llm: LlmSettings {
                 provider: LlmProvider::Gemini,
                 api_key: String::new(),
+                system_prompt: DEFAULT_SYSTEM_PROMPT.to_string(),
             },
         }
     }
@@ -85,6 +101,7 @@ impl Default for LlmSettings {
         Self {
             provider: LlmProvider::Gemini,
             api_key: String::new(),
+            system_prompt: DEFAULT_SYSTEM_PROMPT.to_string(),
         }
     }
 }

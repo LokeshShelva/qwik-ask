@@ -136,6 +136,45 @@ const handleApiKeyChange = async (e: Event) => {
   }
 };
 
+const handleSystemPromptChange = async (e: Event) => {
+  const target = e.target as HTMLTextAreaElement;
+  if (!settings.value) return;
+
+  const updated = {
+    ...settings.value,
+    llm: {
+      ...settings.value.llm,
+      system_prompt: target.value,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+  } catch (err) {
+    console.error('Failed to update system prompt:', err);
+  }
+};
+
+const resetSystemPrompt = async () => {
+  if (!settings.value) return;
+
+  const { DEFAULT_SYSTEM_PROMPT } = await import('./types/settings');
+  
+  const updated = {
+    ...settings.value,
+    llm: {
+      ...settings.value.llm,
+      system_prompt: DEFAULT_SYSTEM_PROMPT,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+  } catch (err) {
+    console.error('Failed to reset system prompt:', err);
+  }
+};
+
 const openSettingsFile = async () => {
   try {
     await invoke('open_settings_file');
@@ -294,6 +333,36 @@ onUnmounted(() => {
                 placeholder="Enter API key"
               />
             </div>
+          </div>
+
+          <!-- System Prompt -->
+          <div class="setting-group system-prompt-group">
+            <div class="system-prompt-header">
+              <div class="setting-info">
+                <label>System Prompt</label>
+                <span class="setting-hint">Customize AI behavior and personality</span>
+              </div>
+              <button 
+                class="btn-ghost-sm" 
+                @click="resetSystemPrompt"
+                :disabled="loading"
+                title="Reset to default"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+                Reset
+              </button>
+            </div>
+            <textarea 
+              class="system-prompt-input"
+              :value="settings.llm.system_prompt"
+              @blur="handleSystemPromptChange"
+              :disabled="loading"
+              placeholder="Enter a system prompt to customize AI behavior..."
+              rows="6"
+            ></textarea>
           </div>
         </div>
 

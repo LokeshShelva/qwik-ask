@@ -47,9 +47,6 @@ const addCodeBlockCopyButtons = async () => {
     // Skip if already has a copy button
     if (pre.querySelector('.code-copy-btn')) return;
     
-    // Make pre position relative for absolute button positioning
-    pre.style.position = 'relative';
-    
     // Create copy button
     const btn = document.createElement('button');
     btn.className = 'code-copy-btn';
@@ -74,7 +71,8 @@ const addCodeBlockCopyButtons = async () => {
       }
     });
     
-    pre.appendChild(btn);
+    // Insert at beginning for sticky positioning
+    pre.insertBefore(btn, pre.firstChild);
   });
 };
 
@@ -92,18 +90,19 @@ onUpdated(addCodeBlockCopyButtons);
     
     <!-- Assistant message: full with copy -->
     <template v-else>
-      <div class="assistant-header">
+      <div ref="messageContentRef" class="message-content markdown-body" v-html="renderedContent"></div>
+      <div class="assistant-footer">
         <button 
           v-if="content" 
-          class="copy-btn" 
+          class="response-copy-btn" 
           @click="copyContent" 
-          :title="copied ? 'Copied!' : 'Copy'"
+          :title="copied ? 'Copied!' : 'Copy response'"
         >
           <CheckIcon v-if="copied" :size="12" />
           <CopyIcon v-else :size="12" />
+          <span>{{ copied ? 'Copied' : 'Copy' }}</span>
         </button>
       </div>
-      <div ref="messageContentRef" class="message-content markdown-body" v-html="renderedContent"></div>
     </template>
   </div>
 </template>
@@ -141,36 +140,36 @@ onUpdated(addCodeBlockCopyButtons);
   position: relative;
 }
 
-.assistant-header {
-  position: absolute;
-  top: 0;
-  right: 0;
-  opacity: 0;
-  transition: opacity 0.15s ease;
+.assistant-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
-.message-assistant:hover .assistant-header {
-  opacity: 1;
-}
-
-.copy-btn {
+.response-copy-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+  gap: 4px;
+  padding: 4px 8px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-muted);
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.copy-btn:hover {
+.response-copy-btn:hover {
   background: var(--bg-primary);
   color: var(--text-primary);
   border-color: var(--text-muted);
+}
+
+.response-copy-btn span {
+  line-height: 1;
 }
 
 .message-content {
@@ -218,9 +217,12 @@ onUpdated(addCodeBlockCopyButtons);
 
 /* Code block copy button */
 .markdown-body :deep(.code-copy-btn) {
-  position: absolute;
+  position: sticky;
+  float: right;
   top: 6px;
   right: 6px;
+  margin-top: -32px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -16,7 +16,7 @@
         "label": "main",
         "title": "quick-assist",
         "width": 680,
-        "height": 80,
+        "height": 110,
         "resizable": false,
         "decorations": false,
         "transparent": true,

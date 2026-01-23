@@ -276,6 +276,18 @@ body,
   box-shadow: 0 0 0 2px var(--ring);
 }
 
+.select-input option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+.select-input option:hover,
+.select-input option:focus,
+.select-input option:checked {
+  background: var(--bg-secondary);
+}
+
 /* Shortcut Display - compact kbd style */
 .shortcut-display {
   display: inline-flex;

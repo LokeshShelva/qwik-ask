@@ -27,7 +27,7 @@ let unlistenFocus: (() => void) | null = null;
 let unlistenSystemTheme: (() => void) | null = null;
 let isAnimating = false;
 
-const MIN_HEIGHT = 80;
+const MIN_HEIGHT = 110;
 const MAX_HEIGHT = 500;
 const ANIMATION_DURATION = 250; // ms
 
@@ -115,6 +115,13 @@ const handleKeydown = async (e: KeyboardEvent) => {
     resetChat();
     inputQuery.value = '';
     await appWindow.hide();
+    return;
+  }
+  
+  // Ctrl+K to open settings (Windows)
+  if (e.ctrlKey && e.key === 'k') {
+    e.preventDefault();
+    await openSettings();
     return;
   }
 };
@@ -246,11 +253,11 @@ onUnmounted(() => {
       {{ streamError }}
     </div>
     
-    <!-- Footer with actions -->
-    <footer v-if="hasMessages" class="launcher-footer">
+    <!-- Footer with actions - always visible -->
+    <footer class="launcher-footer">
       <div class="footer-hints">
         <span class="hint"><kbd>ESC</kbd> Close</span>
-        <span class="hint"><kbd>⌘</kbd> <kbd>K</kbd> Settings</span>
+        <span class="hint"><kbd>Ctrl</kbd> <kbd>K</kbd> Settings</span>
       </div>
     </footer>
   </main>

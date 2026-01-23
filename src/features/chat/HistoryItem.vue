@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Conversation } from '../types/history';
+import type { Conversation } from './types/history';
 
 const props = defineProps<{
   conversation: Conversation;
+  isActive?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -35,7 +36,7 @@ const handleDelete = (e: Event) => {
 </script>
 
 <template>
-  <div class="history-item" @click="handleClick">
+  <div class="history-item" :class="{ active: isActive }" @click="handleClick">
     <div class="history-item-content">
       <span class="history-item-title">{{ conversation.title }}</span>
       <span class="history-item-time">{{ formatTime(conversation.updated_at) }}</span>
@@ -57,6 +58,16 @@ const handleDelete = (e: Event) => {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.history-item:hover {
+  background: var(--bg-hover);
+}
+
+.history-item.active {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
 }
 
 .history-item:hover {

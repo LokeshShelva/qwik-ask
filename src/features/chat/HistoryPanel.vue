@@ -10,9 +10,9 @@ const emit = defineEmits<{
 
 const {
   groupedConversations,
-  searchQuery,
   loading,
   hasConversations,
+  currentConversationId,
   search,
   loadConversation,
   deleteConversation,
@@ -30,7 +30,7 @@ watch(searchInput, (value) => {
 });
 
 const handleSelect = async (id: string) => {
-  const messages = await loadConversation(id);
+  await loadConversation(id);
   emit('select', id);
 };
 
@@ -104,6 +104,7 @@ const handleNewChat = () => {
               v-for="conv in groupedConversations.today"
               :key="conv.id"
               :conversation="conv"
+              :is-active="conv.id === currentConversationId"
               @select="handleSelect"
               @delete="handleDelete"
             />
@@ -118,6 +119,7 @@ const handleNewChat = () => {
               v-for="conv in groupedConversations.yesterday"
               :key="conv.id"
               :conversation="conv"
+              :is-active="conv.id === currentConversationId"
               @select="handleSelect"
               @delete="handleDelete"
             />
@@ -132,6 +134,7 @@ const handleNewChat = () => {
               v-for="conv in groupedConversations.lastWeek"
               :key="conv.id"
               :conversation="conv"
+              :is-active="conv.id === currentConversationId"
               @select="handleSelect"
               @delete="handleDelete"
             />
@@ -146,6 +149,7 @@ const handleNewChat = () => {
               v-for="conv in groupedConversations.older"
               :key="conv.id"
               :conversation="conv"
+              :is-active="conv.id === currentConversationId"
               @select="handleSelect"
               @delete="handleDelete"
             />
@@ -162,34 +166,37 @@ const handleNewChat = () => {
   flex-direction: column;
   width: 280px;
   height: 100%;
-  background: var(--bg-secondary);
+  background: #18181b; /* Solid zinc-900 to fix transparency */
   border-right: 1px solid var(--border);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
 }
 
 .history-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 10px 12px; /* reduced padding */
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .history-title {
-  font-size: 14px;
+  font-size: 13px; /* reduced size */
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .history-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px; /* smaller button */
+  height: 24px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -203,17 +210,18 @@ const handleNewChat = () => {
 .history-search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 12px 14px 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  margin: 10px 12px 6px; /* tighter spacing */
+  padding: 6px 8px; /* compact padding */
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px; /* smaller radius */
 }
 
 .search-icon {
   color: var(--text-muted);
   flex-shrink: 0;
+  opacity: 0.7;
 }
 
 .search-input {
@@ -221,8 +229,9 @@ const handleNewChat = () => {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 13px;
+  font-size: 12px; /* smaller font */
   color: var(--text-primary);
+  min-width: 0;
 }
 
 .search-input::placeholder {
@@ -234,13 +243,13 @@ const handleNewChat = () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: 0 14px 12px;
-  padding: 8px 12px;
+  margin: 6px 12px 10px;
+  padding: 6px 10px; /* compact button */
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -259,7 +268,7 @@ const handleNewChat = () => {
 }
 
 .history-content::-webkit-scrollbar {
-  width: 6px;
+  width: 5px; /* thinner scrollbar */
 }
 
 .history-content::-webkit-scrollbar-track {
@@ -280,26 +289,26 @@ const handleNewChat = () => {
   padding: 32px 16px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .history-empty-hint {
-  font-size: 12px;
+  font-size: 11px;
   margin-top: 4px;
   opacity: 0.7;
 }
 
 .history-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .history-group-title {
-  font-size: 11px;
+  font-size: 10px; /* smaller title */
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 8px 12px 4px;
+  padding: 6px 8px 2px;
   margin: 0;
 }
 </style>

@@ -16,7 +16,6 @@ export function useHistory() {
      * Group conversations by time period
      */
     const groupedConversations = computed<GroupedHistory>(() => {
-        const now = Date.now();
         const todayStart = new Date().setHours(0, 0, 0, 0);
         const yesterdayStart = todayStart - 86400000;
         const weekStart = todayStart - 7 * 86400000;

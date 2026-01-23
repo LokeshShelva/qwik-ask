@@ -33,7 +33,6 @@ let isAnimating = false;
 
 const MIN_HEIGHT = 110;
 const MAX_HEIGHT = 500;
-const HISTORY_WIDTH = 280;
 const BASE_WIDTH = 680;
 const ANIMATION_DURATION = 250; // ms
 
@@ -86,7 +85,7 @@ const updateWindowSize = async () => {
   const expanded = isExpanded.value;
   const showHistory = historyOpen.value;
   
-  const targetWidth = showHistory ? BASE_WIDTH + HISTORY_WIDTH : BASE_WIDTH;
+  const targetWidth = BASE_WIDTH;
   const targetHeight = expanded ? MAX_HEIGHT : MIN_HEIGHT;
   
   if (expanded || showHistory) {
@@ -241,11 +240,15 @@ onUnmounted(() => {
 <template>
   <div class="app-container">
     <!-- History Panel -->
-    <HistoryPanel
-      v-if="historyOpen"
-      @select="handleHistorySelect"
-      @close="handleHistoryClose"
-    />
+    <!-- History Panel Overlay -->
+    <Transition name="slide">
+      <HistoryPanel
+        v-if="historyOpen"
+        class="history-overlay"
+        @select="handleHistorySelect"
+        @close="handleHistoryClose"
+      />
+    </Transition>
     
     <!-- Main Launcher -->
     <main class="launcher" :class="{ 'with-history': historyOpen }">
@@ -321,6 +324,27 @@ onUnmounted(() => {
   display: flex;
   height: 100%;
   background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.history-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-100%);
 }
 
 .launcher.with-history {

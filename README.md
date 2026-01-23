@@ -26,7 +26,7 @@ It's gone. Like it was never there. It's the "I definitely knew that API syntax 
 Because I am lazy. And efficient. But mostly lazy. I wanted an AI experience that felt like Spotlight or Raycast, but dedicated to just chatting. No bells, no whistles, just answers.
 
 ## Features (The non-boring list)
-- 🚀 **Fast.** Like, really fast.
+- 🚀 **Fast.** atleast feels fast.
 - 🔒 **Local & Private.** Your chats stay on your machine. I don't want your data.
 - 🔑 **BYOK (Bring Your Own Key).** No subscriptions here. Just plug in your own API key and go.
 - 🌘 **Dark Mode.** obviously.
@@ -36,5 +36,17 @@ Because I am lazy. And efficient. But mostly lazy. I wanted an AI experience tha
 ## "Is it good?"
 It works on my machine. 🤷‍♂️
 
+## Honest Disclosure
+Look, I heavily **"vibe coded"** this using **Claude Opus**. I barely know what I'm doing half the time.
+The code might not be the absolute fastest or cleanest thing in the universe (please don't roast me too hard), but the **app feels fast**, and that's what matters. It gets the job done.
+
+## Developers
+Want to contribute? Or just see how the messy code works?
+Check out the [Contributing Guide](CONTRIBUTING.md) to get started. It uses Tauri, Vue, and a bit of Rust.
+
+## License
+MIT. Go wild. See [LICENSE](LICENSE) for details.
+
 ---
-*Built with love, caffeine, a refusal to switch windows and claude opus of course. (It's 2026 😁)*
+*Built with love, caffeine, a refusal to switch windows, and Claude Opus. (It's 2026 😁)*
+*PS: Hi from Gemini! I helped glue this chaos together. 👋*

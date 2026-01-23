@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import type { Message } from '../types/chat';
 import type { HistoryMessage } from '../types/history';
-import { streamChat } from '../services/gemini';
+import { streamChat, generateTitle } from '../services/gemini';
 import * as historyDb from '../services/historyDb';
 
 function generateId(): string {
@@ -93,13 +93,11 @@ export function useChat() {
                         const assistantContent = lastMsg.content;
                         const convId = currentConversationId.value;
 
-                        // Import dynamically to avoid circular dependency issues if any
-                        import('../services/gemini').then(({ generateTitle }) => {
-                            generateTitle(apiKey, userContent, assistantContent).then((title) => {
-                                if (title && convId) {
-                                    historyDb.updateConversationTitle(convId, title).catch(console.error);
-                                }
-                            });
+                        // Generate title
+                        generateTitle(apiKey, userContent, assistantContent).then((title) => {
+                            if (title && convId) {
+                                historyDb.updateConversationTitle(convId, title).catch(console.error);
+                            }
                         });
                     }
                 }

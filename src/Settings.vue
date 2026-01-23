@@ -7,12 +7,43 @@ import type { Theme, LlmProvider } from './types/settings';
 import SettingsIcon from './components/SettingsIcon.vue';
 import KeyboardIcon from './components/KeyboardIcon.vue';
 import InfoIcon from './components/InfoIcon.vue';
+import ShortcutRecorder from './components/ShortcutRecorder.vue';
 
 const settingsWindow = getCurrentWindow();
 
 const { settings, loading, error, loadSettings, updateSettings } = useSettings();
 
 let unlistenClose: (() => void) | null = null;
+
+// Shortcut recorder modal state
+const showShortcutRecorder = ref(false);
+
+const openShortcutRecorder = () => {
+  showShortcutRecorder.value = true;
+};
+
+const closeShortcutRecorder = () => {
+  showShortcutRecorder.value = false;
+};
+
+const handleShortcutSave = async (newShortcut: string) => {
+  if (!settings.value) return;
+
+  const updated = {
+    ...settings.value,
+    shortcuts: {
+      ...settings.value.shortcuts,
+      toggle_launcher: newShortcut,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+    showShortcutRecorder.value = false;
+  } catch (err) {
+    console.error('Failed to update shortcut:', err);
+  }
+};
 
 const handleAutoStartupToggle = async (e: Event) => {
   const target = e.target as HTMLInputElement;
@@ -130,12 +161,12 @@ onUnmounted(() => {
     <div v-else-if="settings" class="settings-content-wrapper">
       <main class="settings-content">
         <h1 class="page-title">Settings</h1>
-        <p class="page-description">Manage your Quick Assist preferences</p>
+        <p class="page-description">Configure your Quick Assist preferences</p>
 
         <!-- General Settings Group -->
         <div class="setting-group-container">
           <h2 class="group-title">
-            <SettingsIcon :size="20" />
+            <SettingsIcon :size="14" />
             General
           </h2>
 
@@ -143,7 +174,7 @@ onUnmounted(() => {
             <div class="setting-item">
               <div class="setting-info">
                 <label>Launch at startup</label>
-                <span class="setting-hint">Automatically start Quick Assist when you log in</span>
+                <span class="setting-hint">Start when you log in</span>
               </div>
               <label class="toggle">
                 <input 
@@ -159,7 +190,7 @@ onUnmounted(() => {
             <div class="setting-item">
               <div class="setting-info">
                 <label>Theme</label>
-                <span class="setting-hint">Choose your preferred color theme</span>
+                <span class="setting-hint">Color scheme</span>
               </div>
               <select 
                 class="select-input"
@@ -178,7 +209,7 @@ onUnmounted(() => {
         <!-- Shortcuts Settings Group -->
         <div class="setting-group-container">
           <h2 class="group-title">
-            <KeyboardIcon :size="20" />
+            <KeyboardIcon :size="14" />
             Shortcuts
           </h2>
 
@@ -186,9 +217,19 @@ onUnmounted(() => {
             <div class="setting-item">
               <div class="setting-info">
                 <label>Toggle launcher</label>
-                <span class="setting-hint">Show or hide the Quick Assist launcher</span>
+                <span class="setting-hint">Show or hide Quick Assist</span>
               </div>
-              <kbd class="shortcut-display">{{ settings.shortcuts.toggle_launcher }}</kbd>
+              <button 
+                class="shortcut-btn" 
+                @click="openShortcutRecorder"
+                :disabled="loading"
+              >
+                <kbd>{{ settings.shortcuts.toggle_launcher }}</kbd>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -196,18 +237,18 @@ onUnmounted(() => {
         <!-- LLM Settings Group -->
         <div class="setting-group-container">
           <h2 class="group-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
             </svg>
-            AI Integration
+            AI Provider
           </h2>
 
           <div class="setting-group">
             <div class="setting-item">
               <div class="setting-info">
-                <label>Model Provider</label>
-                <span class="setting-hint">Choose your AI model provider</span>
+                <label>Model provider</label>
+                <span class="setting-hint">Select AI service</span>
               </div>
               <select 
                 class="select-input"
@@ -216,14 +257,14 @@ onUnmounted(() => {
                 :disabled="loading"
               >
                 <option value="gemini">Gemini</option>
-                <option value="openai" disabled>OpenAI (Coming Soon)</option>
+                <option value="openai" disabled>OpenAI (Soon)</option>
               </select>
             </div>
 
             <div class="setting-item">
               <div class="setting-info">
                 <label>API Key</label>
-                <span class="setting-hint">Enter your {{ settings.llm.provider }} API key</span>
+                <span class="setting-hint">Your {{ settings.llm.provider }} key</span>
               </div>
               <input 
                 type="password" 
@@ -231,7 +272,7 @@ onUnmounted(() => {
                 :value="settings.llm.api_key"
                 @blur="handleApiKeyChange"
                 :disabled="loading"
-                placeholder="Enter your API key"
+                placeholder="Enter API key"
               />
             </div>
           </div>
@@ -240,24 +281,32 @@ onUnmounted(() => {
         <!-- About Section -->
         <div class="setting-group-container">
           <h2 class="group-title">
-            <InfoIcon :size="20" />
+            <InfoIcon :size="14" />
             About
           </h2>
 
           <div class="about-info">
             <h2>Quick Assist</h2>
-            <p class="version">Version 0.1.0</p>
-            <p class="description">A fast launcher application inspired by PowerToys Run.</p>
+            <p class="version">v0.1.0</p>
+            <p class="description">A fast launcher for AI-powered assistance.</p>
             <p class="settings-location">
-              Settings are stored in <code>settings.json</code> and can be manually edited
+              Settings stored in <code>settings.json</code>
             </p>
             <button @click="openSettingsFile" class="btn-secondary" :disabled="loading">
-              Open settings.json
+              Open settings file
             </button>
           </div>
         </div>
       </main>
     </div>
+
+    <!-- Shortcut Recorder Modal -->
+    <ShortcutRecorder 
+      v-if="showShortcutRecorder && settings"
+      :current-shortcut="settings.shortcuts.toggle_launcher"
+      @save="handleShortcutSave"
+      @cancel="closeShortcutRecorder"
+    />
   </div>
 </template>
 

@@ -113,6 +113,18 @@ const toggleHistoryPanel = async () => {
   }
 };
 
+const handleNewChat = () => {
+  resetChat();
+  inputQuery.value = '';
+  closeHistory();
+  // Focus input after closing history
+  nextTick(() => {
+    if (inputEl.value) {
+      inputEl.value.focus();
+    }
+  });
+};
+
 const handleHistorySelect = async (conversationId: string) => {
   // Load the conversation messages
   const historyMessages = await historyDb.getMessages(conversationId);
@@ -247,6 +259,7 @@ onUnmounted(() => {
         class="history-overlay"
         @select="handleHistorySelect"
         @close="handleHistoryClose"
+        @new-chat="handleNewChat"
       />
     </Transition>
     
@@ -311,6 +324,7 @@ onUnmounted(() => {
         <div class="footer-hints">
           <span class="hint"><kbd>ESC</kbd> Close</span>
           <span class="hint"><kbd>Ctrl</kbd> <kbd>H</kbd> History</span>
+          <span class="hint"><kbd>Ctrl</kbd> <kbd>K</kbd> Settings</span>
         </div>
       </footer>
     </main>

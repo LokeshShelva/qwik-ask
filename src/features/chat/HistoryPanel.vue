@@ -6,6 +6,7 @@ import HistoryItem from './HistoryItem.vue';
 const emit = defineEmits<{
   select: [id: string];
   close: [];
+  'new-chat': [];
 }>();
 
 const {
@@ -43,7 +44,7 @@ const handleClose = () => {
 };
 
 const handleNewChat = () => {
-  emit('close');
+  emit('new-chat');
 };
 </script>
 

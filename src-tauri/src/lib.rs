@@ -1,5 +1,4 @@
 use tauri::Manager;
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
 mod commands;
 mod settings;
@@ -16,9 +15,6 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Define the shortcut: Alt+Space (common for launchers)
-    let shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Space);
-
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -42,15 +38,33 @@ pub fn run() {
         )
         .plugin(tauri_plugin_opener::init())
         .setup(move |app| {
-            // Register global shortcut
-            let _ = app.global_shortcut().register(shortcut);
-
             // Initialize settings manager
             let settings_manager = SettingsManager::new(app.handle().clone());
 
-            // Load and apply settings
-            if let Ok(settings) = settings_manager.load() {
-                let _ = settings_manager.apply(&settings);
+            // Load settings and register the shortcut from settings.json
+            match settings_manager.load() {
+                Ok(settings) => {
+                    // Register the shortcut from settings
+                    if let Err(e) = settings_manager.register_initial_shortcut(&settings.shortcuts.toggle_launcher) {
+                        eprintln!("Failed to register shortcut from settings: {}. Using default.", e);
+                        // Fallback to default shortcut
+                        let default_shortcut = "Alt+Shift+Space";
+                        if let Err(e2) = settings_manager.register_initial_shortcut(default_shortcut) {
+                            eprintln!("Failed to register default shortcut: {}", e2);
+                        }
+                    }
+                    
+                    // Apply other settings (auto startup, etc.)
+                    let _ = settings_manager.apply_auto_startup_only(&settings);
+                }
+                Err(e) => {
+                    eprintln!("Failed to load settings: {}. Using defaults.", e);
+                    // Register default shortcut
+                    let default_shortcut = "Alt+Shift+Space";
+                    if let Err(e2) = settings_manager.register_initial_shortcut(default_shortcut) {
+                        eprintln!("Failed to register default shortcut: {}", e2);
+                    }
+                }
             }
 
             // Store settings manager in app state

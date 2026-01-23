@@ -1,16 +1,20 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Capability for the main and settings windows",
-  "windows": ["main", "settings"],
-  "permissions": [
-    "core:default",
-    "opener:default",
-    "core:window:allow-hide",
-    "core:window:allow-show",
-    "core:window:allow-set-focus",
-    "core:window:allow-set-size",
-    "core:window:allow-center",
-    "core:event:default"
-  ]
+    "$schema": "../gen/schemas/desktop-schema.json",
+    "identifier": "default",
+    "description": "Capability for the main and settings windows",
+    "windows": [
+        "main",
+        "settings"
+    ],
+    "permissions": [
+        "core:default",
+        "opener:default",
+        "core:window:allow-hide",
+        "core:window:allow-show",
+        "core:window:allow-set-focus",
+        "core:window:allow-set-size",
+        "core:window:allow-center",
+        "core:window:allow-minimize",
+        "core:event:default"
+    ]
 }

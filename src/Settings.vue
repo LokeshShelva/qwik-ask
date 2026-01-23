@@ -17,6 +17,15 @@ const { settings, loading, error, loadSettings, updateSettings } = useSettings()
 let unlistenClose: (() => void) | null = null;
 let unlistenSystemTheme: (() => void) | null = null;
 
+// Window controls
+const minimizeWindow = async () => {
+  await settingsWindow.minimize();
+};
+
+const closeWindow = async () => {
+  await settingsWindow.hide();
+};
+
 // Shortcut recorder modal state
 const showShortcutRecorder = ref(false);
 
@@ -205,6 +214,25 @@ onUnmounted(() => {
 
 <template>
   <div class="settings-container">
+    <!-- Custom Title Bar -->
+    <header class="titlebar" data-tauri-drag-region>
+      <div class="titlebar-title" data-tauri-drag-region>
+        <SettingsIcon :size="14" />
+        <span data-tauri-drag-region>Qwik Ask Settings</span>
+      </div>
+      <div class="titlebar-buttons">
+        <button class="titlebar-btn" @click="minimizeWindow" title="Minimize">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path d="M0 5h10" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </button>
+        <button class="titlebar-btn titlebar-btn-close" @click="closeWindow" title="Close">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <path d="M0 0L10 10M10 0L0 10" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </div>
+    </header>
     <!-- Loading State -->
     <div v-if="loading && !settings" class="loading-state">
       <p>Loading settings...</p>

@@ -1,20 +1,17 @@
-use tauri::Manager;
-use tauri::menu::{Menu, MenuItem};
-use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+//! Qwik Ask - A quick launcher for AI conversations
+//!
+//! This is the main entry point for the Tauri application.
 
-mod commands;
+use tauri::Manager;
+
 mod settings;
 mod shortcuts;
+mod tray;
+mod window;
 
-use commands::{settings as settings_commands, window as window_commands};
 use settings::SettingsManager;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
+/// Main application entry point
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -22,11 +19,10 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(move |app, _shortcut, event| {
+                .with_handler(|app, _shortcut, event| {
                     if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
                         if let Some(window) = app.get_webview_window("main") {
                             let is_visible = window.is_visible().unwrap_or(false);
-
                             if is_visible {
                                 let _ = window.hide();
                             } else {
@@ -39,97 +35,42 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
-        .setup(move |app| {
-            // Initialize settings manager
+        .setup(|app| {
+            // Initialize and configure settings
             let settings_manager = SettingsManager::new(app.handle().clone());
-
-            // Load settings and register the shortcut from settings.json
-            match settings_manager.load() {
-                Ok(settings) => {
-                    // Register the shortcut from settings
-                    if let Err(e) = settings_manager.register_initial_shortcut(&settings.shortcuts.toggle_launcher) {
-                        eprintln!("Failed to register shortcut from settings: {}. Using default.", e);
-                        // Fallback to default shortcut
-                        let default_shortcut = "Alt+Shift+Space";
-                        if let Err(e2) = settings_manager.register_initial_shortcut(default_shortcut) {
-                            eprintln!("Failed to register default shortcut: {}", e2);
-                        }
-                    }
-                    
-                    // Apply other settings (auto startup, etc.)
-                    let _ = settings_manager.apply_auto_startup_only(&settings);
-                }
-                Err(e) => {
-                    eprintln!("Failed to load settings: {}. Using defaults.", e);
-                    // Register default shortcut
-                    let default_shortcut = "Alt+Shift+Space";
-                    if let Err(e2) = settings_manager.register_initial_shortcut(default_shortcut) {
-                        eprintln!("Failed to register default shortcut: {}", e2);
-                    }
-                }
-            }
-
-            // Store settings manager in app state
+            initialize_settings(&settings_manager);
             app.manage(settings_manager);
 
             // Setup system tray
-            let settings_item = MenuItem::with_id(app, "settings", "Open Settings", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
-
-            let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .menu(&menu)
-                .show_menu_on_left_click(false) // Disable menu on left click so we can handle it
-                .tooltip("Qwik Ask")
-                .on_menu_event(|app, event| {
-                    match event.id.as_ref() {
-                        "settings" => {
-                            if let Some(window) = app.get_webview_window("settings") {
-                                if let Some(main_window) = app.get_webview_window("main") {
-                                    let _ = main_window.hide();
-                                }
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
-                        "quit" => {
-                            app.exit(0);
-                        }
-                        _ => {}
-                    }
-                })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        // Left click opens settings
-                        let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("settings") {
-                            if let Some(main_window) = app.get_webview_window("main") {
-                                let _ = main_window.hide();
-                            }
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                })
-                .build(app)?;
+            tray::setup(app)?;
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
-            window_commands::open_settings,
-            settings_commands::get_settings,
-            settings_commands::update_settings,
-            settings_commands::reset_settings,
-            settings_commands::get_auto_startup_status,
-            settings_commands::open_settings_file,
+            window::open_settings,
+            settings::get_settings,
+            settings::update_settings,
+            settings::reset_settings,
+            settings::get_auto_startup_status,
+            settings::open_settings_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Initialize settings: load from disk and apply shortcuts/autostart
+fn initialize_settings(settings_manager: &SettingsManager) {
+    match settings_manager.load() {
+        Ok(settings) => {
+            if let Err(e) = settings_manager.register_initial_shortcut(&settings.shortcuts.toggle_launcher) {
+                eprintln!("Failed to register shortcut: {}. Using default.", e);
+                let _ = settings_manager.register_initial_shortcut("Alt+Shift+Space");
+            }
+            let _ = settings_manager.apply_auto_startup_only(&settings);
+        }
+        Err(e) => {
+            eprintln!("Failed to load settings: {}. Using defaults.", e);
+            let _ = settings_manager.register_initial_shortcut("Alt+Shift+Space");
+        }
+    }
 }

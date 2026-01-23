@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Manager};
 
+/// Open the settings window and hide the main window
 #[tauri::command]
 pub fn open_settings(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("settings") {

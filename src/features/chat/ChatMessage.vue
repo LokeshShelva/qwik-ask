@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import { marked } from 'marked';
-import CopyIcon from './CopyIcon.vue';
-import CheckIcon from './CheckIcon.vue';
+import CopyIcon from '../../shared/components/icons/CopyIcon.vue';
+import CheckIcon from '../../shared/components/icons/CheckIcon.vue';
 
 const props = defineProps<{
   content: string;

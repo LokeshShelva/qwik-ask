@@ -4,6 +4,7 @@
 
 use tauri::Manager;
 
+mod migrations;
 mod settings;
 mod shortcuts;
 mod tray;
@@ -35,6 +36,11 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:history.db", migrations::get_migrations())
+                .build(),
+        )
         .setup(|app| {
             // Initialize and configure settings
             let settings_manager = SettingsManager::new(app.handle().clone());

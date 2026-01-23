@@ -36,9 +36,24 @@ Because I am lazy. And efficient. But mostly lazy. I wanted an AI experience tha
 ## "Is it good?"
 It works on my machine. 🤷‍♂️
 
+## The Stack (and why)
+- **Tauri:** Because... obviously. 🦀
+- **Vue:** I know React, but I wanted something similar-ish and fast. ⚡
+
 ## Honest Disclosure
 Look, I heavily **"vibe coded"** this using **Claude Opus**. I barely know what I'm doing half the time.
 The code might not be the absolute fastest or cleanest thing in the universe (please don't roast me too hard), but the **app feels fast**, and that's what matters. It gets the job done.
+
+## The Plan (Maybe?)
+Here is what I *might* do next. (I make no promises. This was built for me, remember?)
+- [ ] Add support for more LLMs (OpenAI, Anthropic, etc.) - currently Gemini only.
+- [ ] Fix the inevitable bugs. 🐛
+- [ ] Polish. Shiny things are nice.
+- [ ] Official Release.
+- [ ] Build for MacOS and Linux.
+- [ ] Optimize.
+
+*Note: I may or may not get around to doing any of this.* 🤷‍♂️
 
 ## Developers
 Want to contribute? Or just see how the messy code works?

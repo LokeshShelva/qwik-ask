@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUpdated, nextTick } from 'vue';
 import { marked } from 'marked';
 import CopyIcon from './CopyIcon.vue';
 import CheckIcon from './CheckIcon.vue';
@@ -10,6 +10,7 @@ const props = defineProps<{
 }>();
 
 const copied = ref(false);
+const messageContentRef = ref<HTMLDivElement | null>(null);
 
 // Configure marked for security
 marked.setOptions({
@@ -35,6 +36,50 @@ const copyContent = async () => {
     console.error('Failed to copy:', e);
   }
 };
+
+// Add copy buttons to code blocks
+const addCodeBlockCopyButtons = async () => {
+  await nextTick();
+  if (!messageContentRef.value) return;
+  
+  const preBlocks = messageContentRef.value.querySelectorAll('pre');
+  preBlocks.forEach((pre) => {
+    // Skip if already has a copy button
+    if (pre.querySelector('.code-copy-btn')) return;
+    
+    // Make pre position relative for absolute button positioning
+    pre.style.position = 'relative';
+    
+    // Create copy button
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.title = 'Copy code';
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code');
+      const text = code ? code.textContent : pre.textContent;
+      
+      try {
+        await navigator.clipboard.writeText(text || '');
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (e) {
+        console.error('Failed to copy code:', e);
+      }
+    });
+    
+    pre.appendChild(btn);
+  });
+};
+
+onMounted(addCodeBlockCopyButtons);
+onUpdated(addCodeBlockCopyButtons);
 </script>
 
 <template>
@@ -58,7 +103,7 @@ const copyContent = async () => {
           <CopyIcon v-else :size="12" />
         </button>
       </div>
-      <div class="message-content markdown-body" v-html="renderedContent"></div>
+      <div ref="messageContentRef" class="message-content markdown-body" v-html="renderedContent"></div>
     </template>
   </div>
 </template>
@@ -144,12 +189,66 @@ const copyContent = async () => {
 }
 
 .markdown-body :deep(pre) {
+  position: relative;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
   padding: 12px;
   overflow-x: auto;
   margin: 12px 0;
   border: 1px solid var(--border);
+}
+
+/* Horizontal scrollbar styling */
+.markdown-body :deep(pre)::-webkit-scrollbar {
+  height: 6px;
+}
+
+.markdown-body :deep(pre)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.markdown-body :deep(pre)::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.markdown-body :deep(pre)::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Code block copy button */
+.markdown-body :deep(.code-copy-btn) {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(39, 39, 42, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  z-index: 1;
+}
+
+.markdown-body :deep(pre:hover .code-copy-btn) {
+  opacity: 1;
+}
+
+.markdown-body :deep(.code-copy-btn:hover) {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.markdown-body :deep(.code-copy-btn.copied) {
+  color: #22c55e;
+  border-color: #22c55e;
 }
 
 .markdown-body :deep(code) {

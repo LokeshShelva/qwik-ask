@@ -1,5 +1,6 @@
 # QwikAsk - A lazy man's AI assistant 🦥 ✨
 ![QwikAsk](./.attachments/QwikAsk.gif)
+*(The GIF is choppy because I used Snipping Tool. The app is smooth. Trust me 👀.)*
 
 **Because opening a browser tab is just too much work.**
 

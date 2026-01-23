@@ -231,7 +231,6 @@ body,
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-top: 1px solid var(--border);
   flex-shrink: 0;
   margin-top: auto;
 }

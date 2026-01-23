@@ -1,5 +1,5 @@
 [package]
-name = "quick-assist"
+name = "qwik-ask"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
@@ -28,3 +28,9 @@ tauri-plugin-store = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
 
+[profile.release]
+panic = "abort"      # Remove panic unwinding code
+codegen-units = 1    # Better optimization (slower compile)
+lto = true           # Link-Time Optimization - smaller binary
+opt-level = "s"      # Optimize for size ("z" for even smaller)
+strip = true         # Strip symbols from binary

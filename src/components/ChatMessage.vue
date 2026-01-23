@@ -144,8 +144,12 @@ onUpdated(addCodeBlockCopyButtons);
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.message-assistant:hover .assistant-footer {
+  opacity: 1;
 }
 
 .response-copy-btn {

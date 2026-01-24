@@ -83,7 +83,12 @@ const handleSubmit = async () => {
 
   await sendMessage(
     query,
-    settings.value?.llm?.api_key || '',
+    {
+      provider: settings.value?.llm?.provider || 'gemini',
+      apiKey: settings.value?.llm?.api_key || '',
+      model: settings.value?.llm?.model || 'gemini-2.0-flash',
+      baseUrl: settings.value?.llm?.base_url,
+    },
     settings.value?.llm?.system_prompt
   );
 };

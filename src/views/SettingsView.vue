@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettings } from '../composables/useSettings';
 import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
+import { PROVIDER_MODELS, CUSTOM_PROVIDER_PRESETS, getDefaultModel } from '../types/settings';
 import type { Theme, LlmProvider } from '../types/settings';
 import SettingsIcon from '../components/icons/SettingsIcon.vue';
 import KeyboardIcon from '../components/icons/KeyboardIcon.vue';
@@ -111,11 +112,16 @@ const handleProviderChange = async (e: Event) => {
   const target = e.target as HTMLSelectElement;
   if (!settings.value) return;
 
+  const newProvider = target.value as LlmProvider;
+  const defaultModel = getDefaultModel(newProvider);
+
   const updated = {
     ...settings.value,
     llm: {
       ...settings.value.llm,
-      provider: target.value as LlmProvider,
+      provider: newProvider,
+      model: defaultModel,
+      base_url: newProvider === 'custom' ? 'http://localhost:11434/v1' : undefined,
     },
   };
 
@@ -125,6 +131,73 @@ const handleProviderChange = async (e: Event) => {
     console.error('Failed to update provider:', err);
   }
 };
+
+const handleModelChange = async (e: Event) => {
+  const target = e.target as HTMLSelectElement;
+  if (!settings.value) return;
+
+  const updated = {
+    ...settings.value,
+    llm: {
+      ...settings.value.llm,
+      model: target.value,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+  } catch (err) {
+    console.error('Failed to update model:', err);
+  }
+};
+
+const handleBaseUrlChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!settings.value) return;
+
+  const updated = {
+    ...settings.value,
+    llm: {
+      ...settings.value.llm,
+      base_url: target.value || undefined,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+  } catch (err) {
+    console.error('Failed to update base URL:', err);
+  }
+};
+
+const handlePresetChange = async (e: Event) => {
+  const target = e.target as HTMLSelectElement;
+  if (!settings.value) return;
+
+  const updated = {
+    ...settings.value,
+    llm: {
+      ...settings.value.llm,
+      base_url: target.value || undefined,
+    },
+  };
+
+  try {
+    await updateSettings(updated);
+  } catch (err) {
+    console.error('Failed to update preset:', err);
+  }
+};
+
+// Computed for available models based on provider
+const availableModels = computed(() => {
+  if (!settings.value) return [];
+  return PROVIDER_MODELS[settings.value.llm.provider] || [];
+});
+
+const isCustomProvider = computed(() => {
+  return settings.value?.llm?.provider === 'custom';
+});
 
 const handleApiKeyChange = async (e: Event) => {
   const target = e.target as HTMLInputElement;
@@ -343,7 +416,85 @@ onUnmounted(() => {
                 :disabled="loading"
               >
                 <option value="gemini">Gemini</option>
-                <option value="openai" disabled>OpenAI (Soon)</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="custom">Custom (OpenAI-compatible)</option>
+              </select>
+            </div>
+
+            <!-- Custom endpoint configuration -->
+            <template v-if="isCustomProvider">
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Endpoint Preset</label>
+                  <span class="setting-hint">Quick select common endpoints</span>
+                </div>
+                <select
+                  class="select-input"
+                  :value="settings.llm.base_url"
+                  @change="handlePresetChange"
+                  :disabled="loading"
+                >
+                  <option 
+                    v-for="preset in CUSTOM_PROVIDER_PRESETS" 
+                    :key="preset.name" 
+                    :value="preset.baseUrl"
+                  >
+                    {{ preset.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Base URL</label>
+                  <span class="setting-hint">API endpoint URL</span>
+                </div>
+                <input
+                  type="text"
+                  class="text-input"
+                  :value="settings.llm.base_url"
+                  @blur="handleBaseUrlChange"
+                  :disabled="loading"
+                  placeholder="http://localhost:11434/v1"
+                />
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <label>Model Name</label>
+                  <span class="setting-hint">e.g., llama3.2, mistral</span>
+                </div>
+                <input
+                  type="text"
+                  class="text-input"
+                  :value="settings.llm.model"
+                  @blur="handleModelChange"
+                  :disabled="loading"
+                  placeholder="Enter model name"
+                />
+              </div>
+            </template>
+
+            <!-- Standard model selection -->
+            <div v-else class="setting-item">
+              <div class="setting-info">
+                <label>Model</label>
+                <span class="setting-hint">Select model to use</span>
+              </div>
+              <select
+                class="select-input"
+                :value="settings.llm.model"
+                @change="handleModelChange"
+                :disabled="loading"
+              >
+                <option 
+                  v-for="model in availableModels" 
+                  :key="model.id" 
+                  :value="model.id"
+                >
+                  {{ model.name }}
+                </option>
               </select>
             </div>
 

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
-import { useSettings } from './composables/useSettings';
-import { applyThemeFromSettings, setupSystemThemeListener } from '../../shared/composables/useTheme';
-import type { Theme, LlmProvider } from './types/settings';
-import SettingsIcon from '../../shared/components/icons/SettingsIcon.vue';
-import KeyboardIcon from '../../shared/components/icons/KeyboardIcon.vue';
-import InfoIcon from '../../shared/components/icons/InfoIcon.vue';
-import ShortcutRecorder from './ShortcutRecorder.vue';
+import { useSettings } from '../composables/useSettings';
+import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
+import type { Theme, LlmProvider } from '../types/settings';
+import SettingsIcon from '../components/icons/SettingsIcon.vue';
+import KeyboardIcon from '../components/icons/KeyboardIcon.vue';
+import InfoIcon from '../components/icons/InfoIcon.vue';
+import ShortcutRecorder from '../components/ShortcutRecorder.vue';
 
 const settingsWindow = getCurrentWindow();
 
@@ -167,7 +167,7 @@ const handleSystemPromptChange = async (e: Event) => {
 const resetSystemPrompt = async () => {
   if (!settings.value) return;
 
-  const { DEFAULT_SYSTEM_PROMPT } = await import('./types/settings');
+  const { DEFAULT_SYSTEM_PROMPT } = await import('../types/settings');
   
   const updated = {
     ...settings.value,
@@ -427,5 +427,5 @@ onUnmounted(() => {
 </template>
 
 <style>
-@import './settings.css';
+@import '../styles/settings.css';
 </style>

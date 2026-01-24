@@ -1,9 +1,72 @@
+//! Global shortcut parsing utilities.
+//!
+//! Parses human-readable shortcut strings like `"Alt+Shift+Space"` into
+//! Tauri's `Shortcut` struct for registration with the global shortcut plugin.
+//!
+//! # Supported Keys
+//!
+//! **Modifiers:** `Ctrl`, `Alt`, `Shift`, `Win`/`Meta`/`Cmd`
+//!
+//! **Keys:**
+//! - Letters: `A`-`Z`
+//! - Numbers: `0`-`9`
+//! - Function keys: `F1`-`F12`
+//! - Special: `Space`, `Enter`, `Tab`, `Escape`, `Backspace`, `Delete`
+//! - Arrow keys: `Up`, `Down`, `Left`, `Right`
+//! - Punctuation: `` ` ``, `-`, `=`, `[`, `]`, `\`, `;`, `'`, `,`, `.`, `/`
+//!
+//! # Example
+//!
+//! ```rust
+//! use crate::shortcuts::parse_shortcut;
+//!
+//! let shortcut = parse_shortcut("Alt+Shift+Space")?;
+//! // Now register with: global_shortcut.register(shortcut)
+//! ```
+
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 
-/// Parse a shortcut string like "Alt+Shift+Space" into a Shortcut struct
+/// Parse a shortcut string into a `Shortcut` struct.
+///
+/// The string format is `"Modifier+Modifier+Key"` where:
+/// - At least one modifier is required (Ctrl, Alt, Shift, or Win/Meta)
+/// - Exactly one non-modifier key is required
+/// - Parts are case-insensitive
+/// - Parts are separated by `+`
+///
+/// # Arguments
+///
+/// * `shortcut_str` - Shortcut string like `"Alt+Shift+Space"` or `"Ctrl+K"`
+///
+/// # Returns
+///
+/// * `Ok(Shortcut)` - Parsed shortcut ready for registration
+/// * `Err(String)` - Human-readable error message
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The string is empty
+/// - No modifier key is present
+/// - No non-modifier key is present
+/// - An unrecognized key name is used
+///
+/// # Examples
+///
+/// ```rust
+/// // Valid shortcuts
+/// parse_shortcut("Alt+Shift+Space")?;  // Ok
+/// parse_shortcut("Ctrl+K")?;           // Ok
+/// parse_shortcut("Ctrl+Alt+Delete")?;  // Ok
+///
+/// // Invalid shortcuts
+/// parse_shortcut("Space");             // Err: no modifier
+/// parse_shortcut("Ctrl+Alt");          // Err: no key
+/// parse_shortcut("Alt+Unknown");       // Err: unknown key
+/// ```
 pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
     let parts: Vec<&str> = shortcut_str.split('+').map(|s| s.trim()).collect();
-    
+
     if parts.is_empty() {
         return Err("Empty shortcut string".to_string());
     }
@@ -18,7 +81,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "alt" => modifiers |= Modifiers::ALT,
             "shift" => modifiers |= Modifiers::SHIFT,
             "win" | "meta" | "super" | "cmd" | "command" => modifiers |= Modifiers::META,
-            
+
             // Function keys
             "f1" => key_code = Some(Code::F1),
             "f2" => key_code = Some(Code::F2),
@@ -32,7 +95,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "f10" => key_code = Some(Code::F10),
             "f11" => key_code = Some(Code::F11),
             "f12" => key_code = Some(Code::F12),
-            
+
             // Special keys
             "space" => key_code = Some(Code::Space),
             "enter" | "return" => key_code = Some(Code::Enter),
@@ -45,13 +108,13 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "end" => key_code = Some(Code::End),
             "pageup" | "pgup" => key_code = Some(Code::PageUp),
             "pagedown" | "pgdn" => key_code = Some(Code::PageDown),
-            
+
             // Arrow keys
             "up" | "arrowup" => key_code = Some(Code::ArrowUp),
             "down" | "arrowdown" => key_code = Some(Code::ArrowDown),
             "left" | "arrowleft" => key_code = Some(Code::ArrowLeft),
             "right" | "arrowright" => key_code = Some(Code::ArrowRight),
-            
+
             // Number keys
             "0" | "digit0" => key_code = Some(Code::Digit0),
             "1" | "digit1" => key_code = Some(Code::Digit1),
@@ -63,7 +126,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "7" | "digit7" => key_code = Some(Code::Digit7),
             "8" | "digit8" => key_code = Some(Code::Digit8),
             "9" | "digit9" => key_code = Some(Code::Digit9),
-            
+
             // Letter keys
             "a" => key_code = Some(Code::KeyA),
             "b" => key_code = Some(Code::KeyB),
@@ -91,7 +154,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "x" => key_code = Some(Code::KeyX),
             "y" => key_code = Some(Code::KeyY),
             "z" => key_code = Some(Code::KeyZ),
-            
+
             // Punctuation and symbols
             "`" | "backquote" => key_code = Some(Code::Backquote),
             "-" | "minus" => key_code = Some(Code::Minus),
@@ -104,7 +167,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "," | "comma" => key_code = Some(Code::Comma),
             "." | "period" => key_code = Some(Code::Period),
             "/" | "slash" => key_code = Some(Code::Slash),
-            
+
             // Numpad
             "numpad0" => key_code = Some(Code::Numpad0),
             "numpad1" => key_code = Some(Code::Numpad1),
@@ -116,7 +179,7 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
             "numpad7" => key_code = Some(Code::Numpad7),
             "numpad8" => key_code = Some(Code::Numpad8),
             "numpad9" => key_code = Some(Code::Numpad9),
-            
+
             other => {
                 return Err(format!("Unknown key: {}", other));
             }
@@ -126,7 +189,10 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
     match key_code {
         Some(code) => {
             if modifiers.is_empty() {
-                Err("Shortcut must have at least one modifier (Ctrl, Alt, Shift, or Win)".to_string())
+                Err(
+                    "Shortcut must have at least one modifier (Ctrl, Alt, Shift, or Win)"
+                        .to_string(),
+                )
             } else {
                 Ok(Shortcut::new(Some(modifiers), code))
             }

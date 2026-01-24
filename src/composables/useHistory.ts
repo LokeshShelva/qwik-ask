@@ -1,23 +1,75 @@
-// Composable for managing chat history state and operations
+/**
+ * @fileoverview History composable for managing chat history panel and conversations.
+ * 
+ * This composable manages:
+ * - History panel open/close state
+ * - Loading and searching conversations from SQLite
+ * - Grouping conversations by time period (today, yesterday, etc.)
+ * - CRUD operations for conversations
+ * 
+ * @example Basic usage
+ * ```typescript
+ * const { historyOpen, openHistory, groupedConversations } = useHistory();
+ * 
+ * // Open panel and load conversations
+ * await openHistory();
+ * 
+ * // Access grouped conversations
+ * console.log(groupedConversations.value.today);
+ * ```
+ * 
+ * @module composables/useHistory
+ */
 
 import { ref, computed } from 'vue';
 import * as historyDb from '../services/historyDb';
 import type { Conversation, HistoryMessage, GroupedHistory } from '../types/history';
 
-// Shared state
+// ============================================================================
+// SHARED STATE
+// ============================================================================
+// State is shared across all component instances using this composable.
+// This enables the history panel state to be accessed from anywhere.
+// ============================================================================
+
+/** Whether the history panel is currently open */
 const historyOpen = ref(false);
+
+/** All loaded conversations */
 const conversations = ref<Conversation[]>([]);
+
+/** Current search query */
 const searchQuery = ref('');
+
+/** Loading state for async operations */
 const loading = ref(false);
+
+/** Currently selected conversation ID */
 const currentConversationId = ref<string | null>(null);
 
+/**
+ * Composable for managing chat history state and operations.
+ * 
+ * **State is shared globally** - the history panel state persists across components.
+ * 
+ * @returns History state and methods
+ */
 export function useHistory() {
     /**
-     * Group conversations by time period
+     * Conversations grouped by time period for display.
+     * 
+     * Groups:
+     * - `today`: Updated today
+     * - `yesterday`: Updated yesterday
+     * - `lastWeek`: Updated in the last 7 days (excluding today/yesterday)
+     * - `older`: Everything else
+     * 
+     * **Quirk:** Uses `updated_at` timestamp, not `created_at`. A conversation
+     * created last week but messaged today appears in "Today".
      */
     const groupedConversations = computed<GroupedHistory>(() => {
         const todayStart = new Date().setHours(0, 0, 0, 0);
-        const yesterdayStart = todayStart - 86400000;
+        const yesterdayStart = todayStart - 86400000; // 24 hours in ms
         const weekStart = todayStart - 7 * 86400000;
 
         const list = conversations.value;
@@ -29,13 +81,12 @@ export function useHistory() {
         };
     });
 
-    /**
-     * Check if there are any conversations
-     */
+    /** Whether there are any conversations loaded */
     const hasConversations = computed(() => conversations.value.length > 0);
 
     /**
-     * Open history panel and load conversations
+     * Open the history panel and load conversations from DB.
+     * Always reloads conversations when opened to ensure fresh data.
      */
     const openHistory = async () => {
         historyOpen.value = true;
@@ -43,7 +94,7 @@ export function useHistory() {
     };
 
     /**
-     * Close history panel
+     * Close the history panel and clear search query.
      */
     const closeHistory = () => {
         historyOpen.value = false;
@@ -51,7 +102,7 @@ export function useHistory() {
     };
 
     /**
-     * Toggle history panel
+     * Toggle the history panel open/closed.
      */
     const toggleHistory = async () => {
         if (historyOpen.value) {
@@ -62,7 +113,8 @@ export function useHistory() {
     };
 
     /**
-     * Load all conversations from database
+     * Load all conversations from database.
+     * Results are ordered by most recently updated.
      */
     const loadConversations = async () => {
         loading.value = true;
@@ -76,7 +128,22 @@ export function useHistory() {
     };
 
     /**
-     * Search conversations by title
+     * Search conversations by title.
+     * 
+     * **Quirk:** Empty/whitespace-only query reloads all conversations
+     * instead of returning empty results.
+     * 
+     * @param query - Search string (matches partial title)
+     * 
+     * @example
+     * ```typescript
+     * // Search for conversations about TypeScript
+     * await search('typescript');
+     * console.log(conversations.value); // Filtered results
+     * 
+     * // Clear search
+     * await search(''); // Reloads all conversations
+     * ```
      */
     const search = async (query: string) => {
         searchQuery.value = query;
@@ -95,7 +162,10 @@ export function useHistory() {
     };
 
     /**
-     * Load messages for a specific conversation
+     * Load all messages for a specific conversation.
+     * 
+     * @param id - Conversation ID
+     * @returns Array of messages, empty array on error
      */
     const loadConversation = async (id: string): Promise<HistoryMessage[]> => {
         try {
@@ -107,14 +177,17 @@ export function useHistory() {
     };
 
     /**
-     * Delete a conversation
+     * Delete a conversation from database and local state.
+     * 
+     * **Quirk:** If deleting the currently selected conversation,
+     * `currentConversationId` is reset to null.
+     * 
+     * @param id - Conversation ID to delete
      */
     const deleteConversation = async (id: string) => {
         try {
             await historyDb.deleteConversation(id);
-            // Remove from local state
             conversations.value = conversations.value.filter((c) => c.id !== id);
-            // If we deleted the current conversation, reset it
             if (currentConversationId.value === id) {
                 currentConversationId.value = null;
             }
@@ -124,21 +197,27 @@ export function useHistory() {
     };
 
     /**
-     * Start a new conversation (resets current ID)
+     * Reset current conversation ID for starting a new chat.
      */
     const startNewConversation = () => {
         currentConversationId.value = null;
     };
 
     /**
-     * Set the current conversation ID
+     * Set the current conversation ID.
+     * 
+     * @param id - Conversation ID or null
      */
     const setCurrentConversation = (id: string | null) => {
         currentConversationId.value = id;
     };
 
     /**
-     * Create a new conversation in the database
+     * Create a new conversation in the database.
+     * Also sets it as the current conversation.
+     * 
+     * @param id - Unique ID for the conversation
+     * @param title - Initial title (often first message truncated)
      */
     const createConversation = async (id: string, title: string) => {
         await historyDb.createConversation(id, title);
@@ -146,7 +225,12 @@ export function useHistory() {
     };
 
     /**
-     * Save a message to the current conversation
+     * Save a message to the current conversation.
+     * No-op if no current conversation is set.
+     * 
+     * @param id - Unique message ID
+     * @param role - 'user' or 'assistant'
+     * @param content - Message content
      */
     const saveMessage = async (id: string, role: string, content: string) => {
         if (!currentConversationId.value) return;
@@ -154,7 +238,6 @@ export function useHistory() {
     };
 
     return {
-        // State
         historyOpen,
         conversations,
         groupedConversations,
@@ -162,7 +245,6 @@ export function useHistory() {
         loading,
         hasConversations,
         currentConversationId,
-        // Actions
         openHistory,
         closeHistory,
         toggleHistory,

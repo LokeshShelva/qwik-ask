@@ -17,7 +17,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,ignore
 //! use crate::shortcuts::parse_shortcut;
 //!
 //! let shortcut = parse_shortcut("Alt+Shift+Space")?;
@@ -53,7 +53,7 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```rust,ignore
 /// // Valid shortcuts
 /// parse_shortcut("Alt+Shift+Space")?;  // Ok
 /// parse_shortcut("Ctrl+K")?;           // Ok
@@ -205,6 +205,8 @@ pub fn parse_shortcut(shortcut_str: &str) -> Result<Shortcut, String> {
 mod tests {
     use super::*;
 
+    // ===== Valid Shortcut Tests =====
+
     #[test]
     fn test_parse_alt_shift_space() {
         let result = parse_shortcut("Alt+Shift+Space");
@@ -218,14 +220,108 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_case_insensitive() {
+        // All these should parse to the same shortcut
+        assert!(parse_shortcut("ctrl+k").is_ok());
+        assert!(parse_shortcut("CTRL+K").is_ok());
+        assert!(parse_shortcut("Ctrl+K").is_ok());
+        assert!(parse_shortcut("cTrL+k").is_ok());
+    }
+
+    #[test]
+    fn test_parse_multiple_modifiers() {
+        assert!(parse_shortcut("Ctrl+Alt+Shift+K").is_ok());
+        assert!(parse_shortcut("Ctrl+Shift+A").is_ok());
+        assert!(parse_shortcut("Alt+Shift+M").is_ok());
+    }
+
+    #[test]
+    fn test_parse_win_meta_modifiers() {
+        // All aliases for the Meta/Windows key should work
+        assert!(parse_shortcut("Win+K").is_ok());
+        assert!(parse_shortcut("Meta+K").is_ok());
+        assert!(parse_shortcut("Super+K").is_ok());
+        assert!(parse_shortcut("Cmd+K").is_ok());
+        assert!(parse_shortcut("Command+K").is_ok());
+    }
+
+    #[test]
+    fn test_parse_function_keys() {
+        assert!(parse_shortcut("Ctrl+F1").is_ok());
+        assert!(parse_shortcut("Alt+F5").is_ok());
+        assert!(parse_shortcut("Ctrl+Shift+F12").is_ok());
+    }
+
+    #[test]
+    fn test_parse_special_keys() {
+        assert!(parse_shortcut("Ctrl+Enter").is_ok());
+        assert!(parse_shortcut("Alt+Tab").is_ok());
+        assert!(parse_shortcut("Ctrl+Escape").is_ok());
+        assert!(parse_shortcut("Ctrl+Backspace").is_ok());
+        assert!(parse_shortcut("Ctrl+Delete").is_ok());
+    }
+
+    #[test]
+    fn test_parse_arrow_keys() {
+        assert!(parse_shortcut("Ctrl+Up").is_ok());
+        assert!(parse_shortcut("Ctrl+Down").is_ok());
+        assert!(parse_shortcut("Ctrl+Left").is_ok());
+        assert!(parse_shortcut("Ctrl+Right").is_ok());
+        assert!(parse_shortcut("Ctrl+ArrowUp").is_ok());
+    }
+
+    #[test]
+    fn test_parse_number_keys() {
+        assert!(parse_shortcut("Ctrl+0").is_ok());
+        assert!(parse_shortcut("Ctrl+1").is_ok());
+        assert!(parse_shortcut("Alt+9").is_ok());
+    }
+
+    #[test]
+    fn test_parse_punctuation_keys() {
+        assert!(parse_shortcut("Ctrl+`").is_ok());
+        assert!(parse_shortcut("Ctrl+-").is_ok());
+        assert!(parse_shortcut("Ctrl+=").is_ok());
+        assert!(parse_shortcut("Ctrl+[").is_ok());
+        assert!(parse_shortcut("Ctrl+]").is_ok());
+        assert!(parse_shortcut("Ctrl+;").is_ok());
+        assert!(parse_shortcut("Ctrl+,").is_ok());
+        assert!(parse_shortcut("Ctrl+.").is_ok());
+        assert!(parse_shortcut("Ctrl+/").is_ok());
+    }
+
+    // ===== Error Tests =====
+
+    #[test]
     fn test_parse_invalid_no_modifier() {
         let result = parse_shortcut("Space");
         assert!(result.is_err());
+        assert!(result.unwrap_err().contains("modifier"));
+    }
+
+    #[test]
+    fn test_parse_invalid_no_key() {
+        let result = parse_shortcut("Ctrl+Alt");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("non-modifier key"));
     }
 
     #[test]
     fn test_parse_invalid_unknown_key() {
         let result = parse_shortcut("Alt+Unknown");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unknown key"));
+    }
+
+    #[test]
+    fn test_parse_invalid_empty_string() {
+        let result = parse_shortcut("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_invalid_only_modifiers() {
+        let result = parse_shortcut("Ctrl+Shift");
         assert!(result.is_err());
     }
 }

@@ -81,3 +81,79 @@ pub fn get_migrations() -> Vec<Migration> {
         kind: MigrationKind::Up,
     }]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_migrations_returns_non_empty() {
+        let migrations = get_migrations();
+        assert!(!migrations.is_empty(), "Should have at least one migration");
+    }
+
+    #[test]
+    fn test_migrations_start_at_version_1() {
+        let migrations = get_migrations();
+        assert_eq!(
+            migrations[0].version, 1,
+            "First migration should be version 1"
+        );
+    }
+
+    #[test]
+    fn test_migrations_have_sequential_versions() {
+        let migrations = get_migrations();
+        for (i, migration) in migrations.iter().enumerate() {
+            let expected_version = (i + 1) as i64;
+            assert_eq!(
+                migration.version, expected_version,
+                "Migration at index {} should have version {}",
+                i, expected_version
+            );
+        }
+    }
+
+    #[test]
+    fn test_migrations_have_descriptions() {
+        let migrations = get_migrations();
+        for migration in migrations {
+            assert!(
+                !migration.description.is_empty(),
+                "Migration {} should have a description",
+                migration.version
+            );
+        }
+    }
+
+    #[test]
+    fn test_migrations_have_sql() {
+        let migrations = get_migrations();
+        for migration in migrations {
+            assert!(
+                !migration.sql.is_empty(),
+                "Migration {} should have SQL content",
+                migration.version
+            );
+        }
+    }
+
+    #[test]
+    fn test_first_migration_creates_tables() {
+        let migrations = get_migrations();
+        let first = &migrations[0];
+
+        assert!(
+            first.sql.contains("CREATE TABLE"),
+            "First migration should create tables"
+        );
+        assert!(
+            first.sql.contains("conversations"),
+            "First migration should create conversations table"
+        );
+        assert!(
+            first.sql.contains("messages"),
+            "First migration should create messages table"
+        );
+    }
+}

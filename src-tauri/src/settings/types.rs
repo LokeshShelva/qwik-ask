@@ -136,7 +136,7 @@ impl Default for AppSettings {
 impl Default for GeneralSettings {
     fn default() -> Self {
         Self {
-            auto_startup: false,
+            auto_startup: true,
             theme: Theme::Dark,
         }
     }

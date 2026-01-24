@@ -6,6 +6,7 @@ import { useSettings } from '../composables/useSettings';
 import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
 import { PROVIDER_MODELS, CUSTOM_PROVIDER_PRESETS, getDefaultModel } from '../types/settings';
 import type { Theme, LlmProvider } from '../types/settings';
+import { DEFAULT_SYSTEM_PROMPT } from '../types/settings';
 import SettingsIcon from '../components/icons/SettingsIcon.vue';
 import KeyboardIcon from '../components/icons/KeyboardIcon.vue';
 import InfoIcon from '../components/icons/InfoIcon.vue';
@@ -240,8 +241,6 @@ const handleSystemPromptChange = async (e: Event) => {
 const resetSystemPrompt = async () => {
   if (!settings.value) return;
 
-  const { DEFAULT_SYSTEM_PROMPT } = await import('../types/settings');
-  
   const updated = {
     ...settings.value,
     llm: {

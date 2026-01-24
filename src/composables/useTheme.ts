@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import type { Theme } from '../../features/settings/types/settings';
+import type { Theme } from '../types/settings';
 
 const currentTheme = ref<'dark' | 'light'>('dark');
 

@@ -1,8 +1,8 @@
 import { createApp } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import Settings from './features/settings/Settings.vue';
-import { applyThemeFromSettings, setupSystemThemeListener } from './shared/composables/useTheme';
-import type { AppSettings } from './features/settings/types/settings';
+import Settings from './views/SettingsView.vue';
+import { applyThemeFromSettings, setupSystemThemeListener } from './composables/useTheme';
+import type { AppSettings } from './types/settings';
 
 // Load settings and apply theme before mounting
 async function initApp() {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useHistory } from './composables/useHistory';
+import { useHistory } from '../composables/useHistory';
 import HistoryItem from './HistoryItem.vue';
 
 const emit = defineEmits<{

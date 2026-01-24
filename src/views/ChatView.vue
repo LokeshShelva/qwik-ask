@@ -2,15 +2,15 @@
 import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue';
 import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
-import SettingsIcon from '../../shared/components/icons/SettingsIcon.vue';
-import HistoryIcon from '../../shared/components/icons/HistoryIcon.vue';
-import ChatMessage from './ChatMessage.vue';
-import HistoryPanel from './HistoryPanel.vue';
-import { useChat } from './composables/useChat';
-import { useHistory } from './composables/useHistory';
-import { useSettings } from '../settings/composables/useSettings';
-import { applyThemeFromSettings, setupSystemThemeListener } from '../../shared/composables/useTheme';
-import * as historyDb from './services/historyDb';
+import SettingsIcon from '../components/icons/SettingsIcon.vue';
+import HistoryIcon from '../components/icons/HistoryIcon.vue';
+import ChatMessage from '../components/ChatMessage.vue';
+import HistoryPanel from '../components/HistoryPanel.vue';
+import { useChat } from '../composables/useChat';
+import { useHistory } from '../composables/useHistory';
+import { useSettings } from '../composables/useSettings';
+import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
+import * as historyDb from '../services/historyDb';
 
 const appWindow = getCurrentWindow();
 const inputQuery = ref('');
@@ -332,7 +332,7 @@ onUnmounted(() => {
 </template>
 
 <style>
-@import './styles.css';
+@import '../styles/chat.css';
 
 .app-container {
   display: flex;

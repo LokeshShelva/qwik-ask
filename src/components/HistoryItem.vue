@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Conversation } from './types/history';
+import type { Conversation } from '../types/history';
 
 const props = defineProps<{
   conversation: Conversation;

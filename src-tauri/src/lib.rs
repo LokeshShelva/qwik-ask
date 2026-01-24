@@ -1,6 +1,24 @@
 //! Qwik Ask - A quick launcher for AI conversations
 //!
-//! This is the main entry point for the Tauri application.
+//! This is the main Tauri application library that sets up:
+//! - Plugin initialization (autostart, store, global shortcuts, SQL)
+//! - Window management for main launcher and settings
+//! - System tray integration
+//! - Settings persistence and application
+//!
+//! # Architecture
+//!
+//! The application consists of two windows:
+//! - **Main window**: A spotlight-style launcher that appears on global shortcut
+//! - **Settings window**: A configuration panel for API keys, shortcuts, and preferences
+//!
+//! # Modules
+//!
+//! - [`settings`] - Settings management (types, persistence, Tauri commands)
+//! - [`shortcuts`] - Global shortcut parsing utilities
+//! - [`tray`] - System tray setup and event handling
+//! - [`window`] - Window management commands
+//! - [`migrations`] - SQLite database migrations for chat history
 
 use tauri::Manager;
 
@@ -12,7 +30,17 @@ mod window;
 
 use settings::SettingsManager;
 
-/// Main application entry point
+/// Main application entry point.
+///
+/// Initializes all Tauri plugins and sets up the application:
+///
+/// 1. **Plugins**: autostart, store, global shortcuts, opener, SQL
+/// 2. **Setup**: Settings loading, shortcut registration, tray creation
+/// 3. **Commands**: Registers all Tauri commands for frontend communication
+///
+/// # Panics
+///
+/// Panics if the Tauri application fails to start (e.g., missing configuration).
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -42,12 +70,10 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
-            // Initialize and configure settings
             let settings_manager = SettingsManager::new(app.handle().clone());
             initialize_settings(&settings_manager);
             app.manage(settings_manager);
 
-            // Setup system tray
             tray::setup(app)?;
 
             Ok(())
@@ -64,11 +90,26 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
-/// Initialize settings: load from disk and apply shortcuts/autostart
+/// Initialize settings on application startup.
+///
+/// Loads settings from disk and applies them:
+/// - Registers the global shortcut for toggling the launcher
+/// - Applies auto-startup configuration
+///
+/// Falls back to default shortcut (`Alt+Shift+Space`) if:
+/// - Settings file doesn't exist
+/// - Settings file is corrupted
+/// - Configured shortcut is invalid or already in use
+///
+/// # Arguments
+///
+/// * `settings_manager` - The settings manager instance to use
 fn initialize_settings(settings_manager: &SettingsManager) {
     match settings_manager.load() {
         Ok(settings) => {
-            if let Err(e) = settings_manager.register_initial_shortcut(&settings.shortcuts.toggle_launcher) {
+            if let Err(e) =
+                settings_manager.register_initial_shortcut(&settings.shortcuts.toggle_launcher)
+            {
                 eprintln!("Failed to register shortcut: {}. Using default.", e);
                 let _ = settings_manager.register_initial_shortcut("Alt+Shift+Space");
             }

@@ -84,9 +84,19 @@ pub struct LlmSettings {
     pub provider: LlmProvider,
     /// API key for the selected provider (stored locally, never sent to our servers)
     pub api_key: String,
+    /// Model identifier (e.g., "gpt-4o", "gemini-2.0-flash")
+    #[serde(default = "default_model")]
+    pub model: String,
+    /// Base URL for custom OpenAI-compatible endpoints
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_url: Option<String>,
     /// System prompt to customize AI behavior
     #[serde(default = "default_system_prompt")]
     pub system_prompt: String,
+}
+
+fn default_model() -> String {
+    "gemini-2.0-flash".to_string()
 }
 
 fn default_system_prompt() -> String {
@@ -95,14 +105,18 @@ fn default_system_prompt() -> String {
 
 /// Supported LLM providers.
 ///
-/// Serializes to lowercase strings: `"gemini"`, `"openai"`.
+/// Serializes to lowercase strings: `"gemini"`, `"openai"`, `"anthropic"`, `"custom"`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LlmProvider {
     /// Google Gemini API
     Gemini,
-    /// OpenAI API (planned, not yet implemented)
+    /// OpenAI API
     OpenAI,
+    /// Anthropic Claude API
+    Anthropic,
+    /// Custom OpenAI-compatible endpoint
+    Custom,
 }
 
 // ============================================================================
@@ -122,7 +136,7 @@ impl Default for AppSettings {
 impl Default for GeneralSettings {
     fn default() -> Self {
         Self {
-            auto_startup: false,
+            auto_startup: true,
             theme: Theme::Dark,
         }
     }
@@ -147,6 +161,8 @@ impl Default for LlmSettings {
         Self {
             provider: LlmProvider::Gemini,
             api_key: String::new(),
+            model: default_model(),
+            base_url: None,
             system_prompt: DEFAULT_SYSTEM_PROMPT.to_string(),
         }
     }
@@ -258,6 +274,8 @@ mod tests {
             llm: LlmSettings {
                 provider: LlmProvider::OpenAI,
                 api_key: "test-api-key".to_string(),
+                model: "gpt-4o".to_string(),
+                base_url: None,
                 system_prompt: "Custom prompt".to_string(),
             },
         };

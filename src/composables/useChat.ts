@@ -12,7 +12,7 @@
  * const { messages, sendMessage, resetChat } = useChat();
  * 
  * // Send a message
- * await sendMessage('Hello!', apiKey, systemPrompt);
+ * await sendMessage('Hello!', llmConfig, systemPrompt);
  * 
  * // Access messages
  * console.log(messages.value);
@@ -27,7 +27,8 @@
 import { ref, computed } from 'vue';
 import type { Message } from '../types/chat';
 import type { HistoryMessage } from '../types/history';
-import { streamChat, generateTitle } from '../services/gemini';
+import type { LlmProvider } from '../types/settings';
+import { getProvider, generateTitle, type LlmConfig } from '../services/llm';
 import * as historyDb from '../services/historyDb';
 
 /**
@@ -65,20 +66,22 @@ const currentAssistantMessage = ref<string>('');
 const currentConversationId = ref<string | null>(null);
 
 /**
+ * LLM configuration for sending messages.
+ */
+export interface ChatLlmConfig {
+    provider: LlmProvider;
+    apiKey: string;
+    model: string;
+    baseUrl?: string;
+}
+
+/**
  * Composable for managing chat state and LLM interactions.
  * 
  * **State is shared globally** - all components using this composable
  * share the same messages array. This is intentional for a single-chat app.
  * 
  * @returns Chat state and methods
- * 
- * @example Loading a previous conversation
- * ```typescript
- * const { loadConversation, messages } = useChat();
- * const historyMessages = await historyDb.getMessages(conversationId);
- * await loadConversation(conversationId, historyMessages);
- * // messages.value now contains the loaded conversation
- * ```
  */
 export function useChat() {
     /** Whether there are any messages in the current conversation */
@@ -93,26 +96,15 @@ export function useChat() {
     /**
      * Send a message to the LLM and stream the response.
      * 
-     * **Quirks:**
-     * - Creates a new conversation in DB on first message (fire-and-forget, doesn't block UI)
-     * - Auto-generates title after first assistant response using a separate LLM call
-     * - Empty assistant messages are removed on error
-     * - Ignores calls if already streaming or content is empty
-     * 
      * @param content - User message content
-     * @param apiKey - Gemini API key
+     * @param llmConfig - LLM configuration (provider, apiKey, model, baseUrl)
      * @param systemPrompt - Optional system prompt to customize LLM behavior
-     * 
-     * @example
-     * ```typescript
-     * await sendMessage(
-     *   'Explain quantum computing',
-     *   'your-api-key',
-     *   'You are a physics teacher. Keep explanations simple.'
-     * );
-     * ```
      */
-    const sendMessage = async (content: string, apiKey: string, systemPrompt?: string) => {
+    const sendMessage = async (
+        content: string,
+        llmConfig: ChatLlmConfig,
+        systemPrompt?: string
+    ) => {
         if (!content.trim() || isStreaming.value) return;
 
         streamError.value = null;
@@ -155,7 +147,15 @@ export function useChat() {
 
         isStreaming.value = true;
 
-        await streamChat(apiKey, messages.value.slice(0, -1), {
+        // Get the appropriate provider and call streamChat
+        const provider = getProvider(llmConfig.provider);
+        const config: LlmConfig = {
+            apiKey: llmConfig.apiKey,
+            model: llmConfig.model,
+            baseUrl: llmConfig.baseUrl,
+        };
+
+        await provider.streamChat(config, messages.value.slice(0, -1), {
             onToken: (token) => {
                 currentAssistantMessage.value += token;
                 const lastMsg = messages.value[messages.value.length - 1];
@@ -179,7 +179,7 @@ export function useChat() {
                         const assistantContent = lastMsg.content;
                         const convId = currentConversationId.value;
 
-                        generateTitle(apiKey, userContent, assistantContent).then((title) => {
+                        generateTitle(config, llmConfig.provider, userContent, assistantContent).then((title) => {
                             if (title && convId) {
                                 historyDb.updateConversationTitle(convId, title).catch(console.error);
                             }
@@ -219,12 +219,6 @@ export function useChat() {
      * 
      * @param conversationId - The conversation ID to associate with
      * @param historyMessages - Messages fetched from historyDb.getMessages()
-     * 
-     * @example
-     * ```typescript
-     * const messages = await historyDb.getMessages('conv-123');
-     * await loadConversation('conv-123', messages);
-     * ```
      */
     const loadConversation = async (conversationId: string, historyMessages: HistoryMessage[]) => {
         resetChat();

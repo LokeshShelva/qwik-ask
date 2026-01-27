@@ -2,16 +2,16 @@
   "git": {
     "commitMessage": "chore: release v${version}",
     "tagName": "v${version}",
-    "requireCleanWorkingDir":  true,
+    "requireCleanWorkingDir": true,
     "requireUpstream": true,
     "push": false,
-    "tag": false
-  },
-  "github": {
-    "release": false
+    "tag":  true
   },
   "npm": {
     "publish": false
+  },
+  "github": {
+    "release": false
   },
   "hooks": {
     "after:bump": "node scripts/sync-tauri-version.js ${version}"

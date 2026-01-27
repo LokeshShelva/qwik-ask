@@ -7,8 +7,8 @@
 
 use super::types::AppSettings;
 use crate::shortcuts::parse_shortcut;
-use std::sync::Mutex;
-use tauri::AppHandle;
+use std::{env, sync::Mutex};
+use tauri::{AppHandle};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 use tauri_plugin_store::StoreExt;
@@ -64,9 +64,14 @@ impl SettingsManager {
     /// * `Ok(AppSettings)` - Loaded or default settings
     /// * `Err(String)` - Error accessing the store
     pub fn load(&self) -> Result<AppSettings, String> {
+        let mut settings_file = "settings.json";
+        if env::var("QWIK_ASK_DEV").is_ok() {
+            settings_file = "dev_settings.json";
+        }
+
         let store = self
             .app
-            .store("settings.json")
+            .store(settings_file)
             .map_err(|e| format!("Failed to access store: {}", e))?;
 
         if let Some(settings_value) = store.get("settings") {
@@ -85,9 +90,14 @@ impl SettingsManager {
     ///
     /// * `settings` - Complete settings object to save
     pub fn save(&self, settings: &AppSettings) -> Result<(), String> {
+        let mut settings_file = "settings.json";
+        if env::var("QWIK_ASK_DEV").is_ok() {
+            settings_file = "dev_settings.json";
+        }
+
         let store = self
             .app
-            .store("settings.json")
+            .store(settings_file)
             .map_err(|e| format!("Failed to access store: {}", e))?;
 
         let settings_value = serde_json::to_value(settings)

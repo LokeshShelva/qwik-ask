@@ -240,12 +240,16 @@ body,
   gap: 16px;
 }
 
+.dev-note {
+  color: var(--text-muted)
+}
+
 .hint {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .hint kbd {

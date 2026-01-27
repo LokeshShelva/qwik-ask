@@ -25,10 +25,20 @@ Before you start hacking, make sure you have the following installed:
     ```
 
 3.  **Run in development mode**
+
+    Set Deveopment environment variable. This switches the app to use dev settings file instead of the normal settings file.
+    This enables you to have the app installed and also run the app in development.
+    ```bash
+    set QWIK_ASK_DEV='true'
+    ```
+
     ```bash
     yarn tauri dev
     ```
     This will fire up the Vite dev server and the Tauri window. Hot reload is active for frontend changes.
+
+    > **NOTE**: Do not forget to change the "Shortcut" in the `dev_settings.json` file, or else the app wont be able to register
+    > the shortcut and will fail to start
 
 ## Project Structure
 

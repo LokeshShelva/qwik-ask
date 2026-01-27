@@ -24,6 +24,8 @@
 mod manager;
 mod types;
 
+use std::env;
+
 pub use manager::SettingsManager;
 pub use types::AppSettings;
 
@@ -139,4 +141,13 @@ pub async fn open_settings_file(app: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("Failed to open settings file: {}", e))?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_environment_variable(env_name: String) -> Result<Option<String>, String> {
+    match env::var(env_name) {
+        Ok(value) => Ok(Some(value)),
+        Err(env::VarError::NotPresent) => Ok(None),
+        Err(e) =>Err(format!("Unable to read env: {}", e))
+    }
 }

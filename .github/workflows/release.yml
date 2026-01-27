@@ -1,78 +1,114 @@
-name: 'Release Alpha'
+name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v0.1.0-alpha.1)'
-        required: true
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-  publish-tauri:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.version.outputs.app_version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set output
+        id: vars
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          CARGO_VERSION=$(grep -m 1 '^version =' src-tauri/Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          
+          if [ "$VERSION" != "$CARGO_VERSION" ]; then
+            echo "::error::Version mismatch! package.json: $VERSION, Cargo.toml: $CARGO_VERSION"
+            exit 1
+          fi
+          
+          echo "app_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✓ Version validated: $VERSION"
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(npx changelogithub --draft --name ${{ steps.vars.outputs.tag }})
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-tauri:
+    needs: create-release
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            args: ''
-          - platform: 'windows-latest'
-            args: ''
-
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+    
     runs-on: ${{ matrix.platform }}
-
+    
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
+      
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
           cache: 'yarn'
-
-      - name: Install Rust stable
+      
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-
+          targets: ${{ matrix.target }}
+      
+      - name: Install dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+      
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
-
+          workspaces: src-tauri/target
+      
       - name: Install frontend dependencies
-        run: yarn install
-
-      - uses: tauri-apps/tauri-action@v0
+        run: yarn install --frozen-lockfile
+      
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ inputs.version }}
-          releaseName: 'QwikAsk ${{ inputs.version }}'
-          releaseBody: |
-            ## ⚠️ Alpha Release - For Testing Only
-
-            This is an early alpha release of QwikAsk for testing purposes.
-
-            ### Installation Notes
-            - **Windows**: Download the `.exe` (NSIS installer) or `.msi` file
-            - **macOS**: Download the `.dmg` file. You may need to right-click → Open and confirm to bypass Gatekeeper (unsigned app)
-            - **Linux**: Download `.deb` for Debian/Ubuntu or `.AppImage` for other distros
-
-            ### Feedback
-            Please report any issues at https://github.com/LokeshShelva/qwik-ask/issues
-          releaseDraft: false
-          prerelease: true
-          args: ${{ matrix.args }}
+          tagName: ${{ github.ref_name }}
+          releaseName: "Quick Assist v${{ needs.create-release.outputs.app_version }}"
+          releaseBody: "${{ needs.create-release.outputs.changelog }}"
+          releaseDraft: true
+          prerelease: false
+          args: --target ${{ matrix.target }}

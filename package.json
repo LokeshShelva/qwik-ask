@@ -22,10 +22,12 @@
         "vue": "^3.5.27"
     },
     "devDependencies": {
+        "@release-it/conventional-changelog": "^10.0.4",
         "@tauri-apps/cli": "^2",
         "@vitejs/plugin-vue": "^6.0.3",
         "@vue/test-utils": "^2.4.6",
         "happy-dom": "^20.3.7",
+        "release-it": "^19.2.4",
         "typescript": "~5.6.2",
         "vite": "^6.0.3",
         "vitest": "^4.0.18",

@@ -85,6 +85,7 @@ pub fn run() {
             settings::reset_settings,
             settings::get_auto_startup_status,
             settings::open_settings_file,
+            settings::get_environment_variable,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

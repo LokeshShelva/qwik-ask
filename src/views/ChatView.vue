@@ -24,6 +24,7 @@ const { appWindow, updateSize, hide } = useWindowResize({
 const inputQuery = ref('');
 const inputEl = ref<HTMLTextAreaElement | null>(null);
 const messagesContainer = ref<HTMLDivElement | null>(null);
+const is_dev = ref<boolean>(false)
 
 // Composables
 const { settings, loadSettings } = useSettings();
@@ -160,6 +161,13 @@ watch([isExpanded, historyOpen], async () => {
 onMounted(async () => {
   await loadSettings();
 
+  try {
+    const dev_env = await invoke("get_environment_variable", {envName: "QWIK_ASK_DEV"})
+    is_dev.value = dev_env !== null;
+  }catch {
+    is_dev.value = false
+  }
+
   if (settings.value) {
     applyThemeFromSettings(settings.value.general.theme);
     unlistenSystemTheme = setupSystemThemeListener(settings.value.general.theme) || null;
@@ -261,6 +269,9 @@ onUnmounted(() => {
           <span class="hint"><kbd>ESC</kbd> Close</span>
           <span class="hint"><kbd>Ctrl</kbd> <kbd>H</kbd> History</span>
           <span class="hint"><kbd>Ctrl</kbd> <kbd>K</kbd> Settings</span>
+        </div>
+        <div v-if="is_dev" class="dev-note">
+          dev
         </div>
       </footer>
     </main>

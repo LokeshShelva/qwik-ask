@@ -176,10 +176,9 @@ export function useChat() {
                     // Auto-generate title after first exchange
                     if (isFirstMessage && messages.value.length === 2) {
                         const userContent = messages.value[0].content;
-                        const assistantContent = lastMsg.content;
                         const convId = currentConversationId.value;
 
-                        generateTitle(config, llmConfig.provider, userContent, assistantContent).then((title) => {
+                        generateTitle(config, llmConfig.provider, userContent).then((title) => {
                             if (title && convId) {
                                 historyDb.updateConversationTitle(convId, title).catch(console.error);
                             }

@@ -71,8 +71,8 @@ export function getProvider(provider: LlmProvider): Provider {
  * The prompt used to generate conversation titles.
  * Centralized here to ensure consistency across all providers.
  */
-const TITLE_PROMPT_TEMPLATE = (userMessage: string, assistantResponse: string) =>
-    `Generate a very short, concise title (3-5 words) for this conversation based on the following exchange.\nUser: ${userMessage}\nAssistant: ${assistantResponse}\nTitle:`;
+const TITLE_PROMPT_TEMPLATE = (userMessage: string) =>
+    `Generate a very short, concise title (3-5 words) for this user question. You should only output the title and nothing else. Even if the user message is vague or irrelevent, generate a title.\nUser: ${userMessage}`;
 
 /**
  * Clean up the generated title by removing common artifacts.
@@ -94,17 +94,15 @@ function cleanTitle(title: string): string {
  * @param config - LLM configuration
  * @param provider - The provider type to use
  * @param userMessage - The user's first message
- * @param assistantResponse - The assistant's first response
  * @returns Generated title (3-5 words) or empty string on error
  */
 export async function generateTitle(
     config: LlmConfig,
     provider: LlmProvider,
     userMessage: string,
-    assistantResponse: string
 ): Promise<string> {
     const llmProvider = getProvider(provider);
-    const prompt = TITLE_PROMPT_TEMPLATE(userMessage, assistantResponse);
+    const prompt = TITLE_PROMPT_TEMPLATE(userMessage);
 
     const rawTitle = await llmProvider.simpleCompletion(config, prompt);
     return cleanTitle(rawTitle);

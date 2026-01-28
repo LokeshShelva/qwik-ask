@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Conversation } from '../types/history';
+import { marked } from 'marked';
 
 const props = defineProps<{
   conversation: Conversation;
@@ -10,6 +12,15 @@ const emit = defineEmits<{
   select: [id: string];
   delete: [id: string];
 }>();
+
+marked.setOptions({
+    breaks: true,
+    gfm: true
+})
+
+// Try to parse the conversation title as markdown. Usually there should
+// not be any markdown
+const content = computed(() => marked.parse(props.conversation.title))
 
 // Format relative time
 const formatTime = (timestamp: number): string => {
@@ -38,7 +49,7 @@ const handleDelete = (e: Event) => {
 <template>
   <div class="history-item" :class="{ active: isActive }" @click="handleClick">
     <div class="history-item-content">
-      <span class="history-item-title">{{ conversation.title }}</span>
+      <span class="history-item-title" v-html="content"></span>
       <span class="history-item-time">{{ formatTime(conversation.updated_at) }}</span>
     </div>
     <button class="history-item-delete" @click="handleDelete" title="Delete">

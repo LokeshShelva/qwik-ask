@@ -15,7 +15,7 @@ Before you start hacking, make sure you have the following installed:
 
 1.  **Clone the repo**
     ```bash
-    git clone https://github.com/yourusername/qwik-ask.git
+    git clone https://github.com/LokeshShelva/qwik-ask.git
     cd qwik-ask
     ```
 

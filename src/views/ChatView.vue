@@ -95,7 +95,7 @@ const handleSubmit = async () => {
 };
 
 const handleInputKeydown = (e: KeyboardEvent) => {
-  // Do not handle keu events if chat history is open
+  // Do not handle key events if chat history is open
   // Chat history can have keyboard shortcuts that should not be
   // blocked
   if (historyOpen.value) return;

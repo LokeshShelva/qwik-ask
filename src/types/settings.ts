@@ -38,20 +38,22 @@ export interface AppSettings {
  */
 export const PROVIDER_MODELS: Record<LlmProvider, { id: string; name: string }[]> = {
     gemini: [
-        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast)' },
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Balanced)' },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Balances)' },
+        { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (Fast)' },
         { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (Smart)' },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Preview)' },
+        { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Preview)' },
     ],
     openai: [
-        { id: 'gpt-4o', name: 'GPT-4o (Flagship)' },
-        { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Fast)' },
-        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-        { id: 'o1', name: 'o1 (Reasoning)' },
+        { id: 'gpt-5-mini', name: 'GPT-5 Mini (Balanced)' },
+        { id: 'gpt-5-nano', name: 'GPT-5 Nano (Fast)' },
+        { id: 'gpt-5.2', name: 'GPT-5.2 (Smart)' },
+        { id: 'gpt-5.2-pro', name: 'GPT-5.2 Pro (Smartest)' },
     ],
     anthropic: [
-        { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4 (Latest)' },
-        { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
-        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku (Fast)' },
+        { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5 (Fast)' },
+        { id: 'claude-sonnet-4-5', name: 'Claude 4.5 Sonnet (Balanced)' },
+        { id: 'claude-opus-4-5', name: 'Claude 4.5 Opus (Smart)' },
     ],
     custom: [],
 };
@@ -87,7 +89,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     llm: {
         provider: 'gemini',
         api_key: '',
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         system_prompt: DEFAULT_SYSTEM_PROMPT,
     },
 };

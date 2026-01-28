@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useHistory } from '../composables/useHistory';
 import HistoryItem from './HistoryItem.vue';
 
@@ -19,6 +19,7 @@ const {
   deleteConversation,
 } = useHistory();
 
+const searchInputEl = ref<HTMLInputElement | null>(null);
 const searchInput = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -46,6 +47,11 @@ const handleClose = () => {
 const handleNewChat = () => {
   emit('new-chat');
 };
+
+onMounted(async() => {
+    await nextTick();
+    searchInputEl.value?.focus();
+})
 </script>
 
 <template>
@@ -67,6 +73,7 @@ const handleNewChat = () => {
         <path d="M21 21l-4.35-4.35"/>
       </svg>
       <input
+        ref="searchInputEl"
         v-model="searchInput"
         type="text"
         class="search-input"

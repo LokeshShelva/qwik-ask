@@ -167,7 +167,7 @@ const handleNewChat = () => {
   flex-direction: column;
   width: 280px;
   height: 100%;
-  background: #18181b; /* Solid zinc-900 to fix transparency */
+  background: var(--bg-primary);
   border-right: 1px solid var(--border);
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
 }

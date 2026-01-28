@@ -16,7 +16,7 @@ import * as historyDb from '../services/historyDb';
 // Window resize composable
 const { appWindow, updateSize, hide } = useWindowResize({
   minHeight: 110,
-  maxHeight: 500,
+  maxHeight: 600,
   baseWidth: 680,
 });
 
@@ -95,6 +95,11 @@ const handleSubmit = async () => {
 };
 
 const handleInputKeydown = (e: KeyboardEvent) => {
+  // Do not handle keu events if chat history is open
+  // Chat history can have keyboard shortcuts that should not be
+  // blocked
+  if (historyOpen.value) return;
+
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     handleSubmit();
@@ -196,6 +201,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <div class="app-window">
   <div class="app-container">
     <!-- History Panel Overlay -->
     <Transition name="slide">
@@ -264,6 +270,9 @@ onUnmounted(() => {
       </div>
 
       <!-- Footer with keyboard hints -->
+            
+            </main>
+        </div>
       <footer class="launcher-footer">
         <div class="footer-hints">
           <span class="hint"><kbd>ESC</kbd> Close</span>
@@ -274,12 +283,18 @@ onUnmounted(() => {
           dev
         </div>
       </footer>
-    </main>
   </div>
 </template>
 
 <style>
 @import '../styles/chat.css';
+
+.app-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
 
 .app-container {
   display: flex;

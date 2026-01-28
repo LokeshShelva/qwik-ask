@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useHistory } from '../composables/useHistory';
 import HistoryItem from './HistoryItem.vue';
 
@@ -19,6 +19,7 @@ const {
   deleteConversation,
 } = useHistory();
 
+const searchInputEl = ref<HTMLInputElement | null>(null);
 const searchInput = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -35,6 +36,20 @@ const handleSelect = async (id: string) => {
   emit('select', id);
 };
 
+const handleInputKeydown = async (e: KeyboardEvent) => {
+    if (e.key == "Enter") {
+        e.preventDefault();
+        await selectFirstConversation()
+    }
+}
+
+const selectFirstConversation = async () => {
+    if(!hasConversations.value) return;
+    const conversations = Object.values(groupedConversations.value).flat()
+    if(conversations.length === 0) return;
+    await handleSelect(conversations[0].id)
+}
+
 const handleDelete = async (id: string) => {
   await deleteConversation(id);
 };
@@ -46,6 +61,11 @@ const handleClose = () => {
 const handleNewChat = () => {
   emit('new-chat');
 };
+
+onMounted(async() => {
+    await nextTick();
+    searchInputEl.value?.focus();
+})
 </script>
 
 <template>
@@ -67,10 +87,12 @@ const handleNewChat = () => {
         <path d="M21 21l-4.35-4.35"/>
       </svg>
       <input
+        ref="searchInputEl"
         v-model="searchInput"
         type="text"
         class="search-input"
         placeholder="Search conversations..."
+        @keydown="handleInputKeydown"
       />
     </div>
 
@@ -167,7 +189,7 @@ const handleNewChat = () => {
   flex-direction: column;
   width: 280px;
   height: 100%;
-  background: #18181b; /* Solid zinc-900 to fix transparency */
+  background: var(--bg-primary);
   border-right: 1px solid var(--border);
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
 }

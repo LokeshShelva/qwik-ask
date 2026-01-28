@@ -36,6 +36,20 @@ const handleSelect = async (id: string) => {
   emit('select', id);
 };
 
+const handleInputKeydown = async (e: KeyboardEvent) => {
+    if (e.key == "Enter") {
+        e.preventDefault();
+        await selectFirstConversation()
+    }
+}
+
+const selectFirstConversation = async () => {
+    if(!hasConversations.value) return;
+    const conversations = Object.values(groupedConversations.value).flat()
+    if(conversations.length === 0) return;
+    await handleSelect(conversations[0].id)
+}
+
 const handleDelete = async (id: string) => {
   await deleteConversation(id);
 };
@@ -78,6 +92,7 @@ onMounted(async() => {
         type="text"
         class="search-input"
         placeholder="Search conversations..."
+        @keydown="handleInputKeydown"
       />
     </div>
 

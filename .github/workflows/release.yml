@@ -100,7 +100,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri/target
+          workspaces: './src-tauri -> target'
       
       - name: Install frontend dependencies
         run: yarn install --frozen-lockfile
@@ -118,5 +118,5 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
           updaterJsonPreferNsis: true

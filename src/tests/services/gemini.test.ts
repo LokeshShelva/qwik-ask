@@ -3,7 +3,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateTitle } from '../../services/gemini';
+import { simpleCompletion } from '../../services/llm/gemini';
+import { generateTitle } from '../../services/llm';
+import type { LlmConfig } from '../../services/llm/types';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -14,8 +16,8 @@ describe('gemini service', () => {
         mockFetch.mockReset();
     });
 
-    describe('generateTitle', () => {
-        it('should generate a title from user and assistant messages', async () => {
+    describe('simpleCompletion', () => {
+        it('should return text from API response', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: () => Promise.resolve({
@@ -27,13 +29,10 @@ describe('gemini service', () => {
                 }),
             });
 
-            const title = await generateTitle(
-                'test-api-key',
-                'What is TypeScript?',
-                'TypeScript is a typed superset of JavaScript...'
-            );
+            const config: LlmConfig = { apiKey: 'test-api-key', model: 'gemini-1.5-flash' };
+            const result = await simpleCompletion(config, 'Generate a title');
 
-            expect(title).toBe('TypeScript Basics');
+            expect(result).toBe('TypeScript Basics');
             expect(mockFetch).toHaveBeenCalledOnce();
         });
 
@@ -43,25 +42,40 @@ describe('gemini service', () => {
                 status: 401,
             });
 
-            const title = await generateTitle(
-                'invalid-key',
-                'Hello',
-                'Hi there!'
-            );
+            const config: LlmConfig = { apiKey: 'invalid-key', model: 'gemini-1.5-flash' };
+            const result = await simpleCompletion(config, 'Hello');
 
-            expect(title).toBe('');
+            expect(result).toBe('');
         });
 
         it('should return empty string on network error', async () => {
             mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-            const title = await generateTitle(
-                'test-api-key',
-                'Hello',
-                'Hi!'
-            );
+            const config: LlmConfig = { apiKey: 'test-api-key', model: 'gemini-1.5-flash' };
+            const result = await simpleCompletion(config, 'Hello');
 
-            expect(title).toBe('');
+            expect(result).toBe('');
+        });
+    });
+
+    describe('generateTitle', () => {
+        it('should generate a title from user message', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve({
+                    candidates: [{
+                        content: {
+                            parts: [{ text: 'TypeScript Basics' }]
+                        }
+                    }]
+                }),
+            });
+
+            const config: LlmConfig = { apiKey: 'test-api-key', model: 'gemini-1.5-flash' };
+            const title = await generateTitle(config, 'gemini', 'What is TypeScript?');
+
+            expect(title).toBe('TypeScript Basics');
+            expect(mockFetch).toHaveBeenCalledOnce();
         });
 
         it('should clean up "Title:" prefix from response', async () => {
@@ -76,7 +90,8 @@ describe('gemini service', () => {
                 }),
             });
 
-            const title = await generateTitle('key', 'msg', 'response');
+            const config: LlmConfig = { apiKey: 'test-api-key', model: 'gemini-1.5-flash' };
+            const title = await generateTitle(config, 'gemini', 'Some message');
 
             expect(title).toBe('Clean Response Test');
         });
@@ -93,7 +108,8 @@ describe('gemini service', () => {
                 }),
             });
 
-            const title = await generateTitle('key', 'msg', 'response');
+            const config: LlmConfig = { apiKey: 'test-api-key', model: 'gemini-1.5-flash' };
+            const title = await generateTitle(config, 'gemini', 'Some message');
 
             expect(title).toBe('Quoted Title');
         });

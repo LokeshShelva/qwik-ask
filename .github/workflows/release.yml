@@ -118,4 +118,5 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
+          uploadUpdaterJson: true
           updaterJsonPreferNsis: true

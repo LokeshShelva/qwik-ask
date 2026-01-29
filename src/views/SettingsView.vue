@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettings } from '../composables/useSettings';
+import { useUpdater } from '../composables/useUpdater';
 import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
 import { PROVIDER_MODELS, CUSTOM_PROVIDER_PRESETS, getDefaultModel } from '../types/settings';
 import type { Theme, LlmProvider } from '../types/settings';
@@ -15,6 +16,24 @@ import ShortcutRecorder from '../components/ShortcutRecorder.vue';
 const settingsWindow = getCurrentWindow();
 
 const { settings, loading, error, loadSettings, updateSettings } = useSettings();
+
+// Updater composable
+const {
+  status: updateStatus,
+  updateInfo,
+  downloadProgress,
+  errorMessage: updateError,
+  currentVersion,
+  isUpdateAvailable,
+  isChecking,
+  isDownloading,
+  isReadyToRestart,
+  hasError: hasUpdateError,
+  checkForUpdates,
+  installUpdate,
+  restartApp,
+  resetStatus: resetUpdateStatus,
+} = useUpdater();
 
 let unlistenClose: (() => void) | null = null;
 let unlistenSystemTheme: (() => void) | null = null;
@@ -553,8 +572,86 @@ onUnmounted(() => {
 
           <div class="about-info">
             <h2>Quick Assist</h2>
-            <p class="version">v0.1.0</p>
+            <p class="version">v{{ currentVersion || '0.1.0' }}</p>
             <p class="description">A fast launcher for AI-powered assistance.</p>
+            
+            <!-- Updates Section -->
+            <div class="update-section">
+              <div class="update-status">
+                <!-- Idle state -->
+                <button 
+                  v-if="updateStatus === 'idle'"
+                  @click="checkForUpdates" 
+                  class="btn-secondary"
+                  :disabled="loading"
+                >
+                  Check for updates
+                </button>
+
+                <!-- Checking state -->
+                <div v-else-if="isChecking" class="update-checking">
+                  <span class="spinner"></span>
+                  <span>Checking for updates...</span>
+                </div>
+
+                <!-- Up to date state -->
+                <div v-else-if="updateStatus === 'up-to-date'" class="update-up-to-date">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                  </svg>
+                  <span>You're up to date!</span>
+                  <button @click="resetUpdateStatus" class="btn-ghost-sm">Check again</button>
+                </div>
+
+                <!-- Update available state -->
+                <div v-else-if="isUpdateAvailable && updateInfo" class="update-available">
+                  <div class="update-available-info">
+                    <strong>Update available: v{{ updateInfo.version }}</strong>
+                    <p v-if="updateInfo.body" class="update-notes">{{ updateInfo.body }}</p>
+                  </div>
+                  <button @click="installUpdate" class="btn-primary">
+                    Download & Install
+                  </button>
+                </div>
+
+                <!-- Downloading state -->
+                <div v-else-if="isDownloading" class="update-downloading">
+                  <span>Downloading update...</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: downloadProgress + '%' }"></div>
+                  </div>
+                  <span class="progress-text">{{ downloadProgress }}%</span>
+                </div>
+
+                <!-- Installing state -->
+                <div v-else-if="updateStatus === 'installing'" class="update-installing">
+                  <span class="spinner"></span>
+                  <span>Installing update...</span>
+                </div>
+
+                <!-- Ready to restart state -->
+                <div v-else-if="isReadyToRestart" class="update-ready">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                  </svg>
+                  <span>Update installed!</span>
+                  <button @click="restartApp" class="btn-primary">
+                    Restart now
+                  </button>
+                </div>
+
+                <!-- Error state -->
+                <div v-else-if="hasUpdateError" class="update-error">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  <span>{{ updateError }}</span>
+                  <button @click="resetUpdateStatus" class="btn-ghost-sm">Try again</button>
+                </div>
+              </div>
+            </div>
+
             <p class="settings-location">
               Settings stored in <code>settings.json</code>
             </p>

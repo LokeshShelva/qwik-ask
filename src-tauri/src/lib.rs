@@ -26,6 +26,7 @@ mod migrations;
 mod settings;
 mod shortcuts;
 mod tray;
+mod updater;
 mod window;
 
 use settings::SettingsManager;
@@ -64,6 +65,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:history.db", migrations::get_migrations())
@@ -86,6 +88,10 @@ pub fn run() {
             settings::get_auto_startup_status,
             settings::open_settings_file,
             settings::get_environment_variable,
+            updater::check_for_updates,
+            updater::download_and_install_update,
+            updater::restart_app,
+            updater::get_current_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

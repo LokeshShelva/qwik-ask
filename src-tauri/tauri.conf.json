@@ -79,6 +79,15 @@
       "preload": [
         "sqlite:history.db"
       ]
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU3RjlFRkVGQURDNDE1NjAKUldSZ0ZjU3Q3Ky81VndEaDVrMGhHZDNTLzV1bnVUVDRMSGNIc2R4UU5HS1AzWHVaQjBKYjZJYTAK",
+      "endpoints": [
+        "https://github.com/LokeshShelva/qwik-ask/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

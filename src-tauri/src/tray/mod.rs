@@ -1,22 +1,23 @@
 //! System tray module.
 //!
 //! Sets up the system tray icon with a context menu and click handlers.
-//! The tray provides quick access to settings and quit functionality.
+//! The tray provides quick access to settings, update checking, and quit functionality.
 //!
 //! # Behavior
 //!
 //! - **Left click**: Opens the settings window
-//! - **Right click**: Shows context menu with "Open Settings" and "Quit"
+//! - **Right click**: Shows context menu with "Open Settings", "Check for Updates", and "Quit"
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{App, Manager};
+use tauri::{App, Emitter, Manager};
+use tauri_plugin_updater::UpdaterExt;
 
 /// Setup the system tray with menu and event handlers.
 ///
 /// Creates a tray icon with:
 /// - App icon
-/// - Context menu (Settings, Quit)
+/// - Context menu (Settings, Check for Updates, Quit)
 /// - Left-click handler to open settings
 ///
 /// # Arguments
@@ -39,8 +40,10 @@ use tauri::{App, Manager};
 /// ```
 pub fn setup(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let settings_item = MenuItem::with_id(app, "settings", "Open Settings", true, None::<&str>)?;
+    let update_item =
+        MenuItem::with_id(app, "check_updates", "Check for Updates", true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
+    let menu = Menu::with_items(app, &[&settings_item, &update_item, &quit_item])?;
 
     let _tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
@@ -50,6 +53,9 @@ pub fn setup(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "settings" => {
                 open_settings_window(app);
+            }
+            "check_updates" => {
+                check_for_updates_from_tray(app.clone());
             }
             "quit" => {
                 app.exit(0);
@@ -88,4 +94,43 @@ fn open_settings_window(app: &tauri::AppHandle) {
         let _ = window.show();
         let _ = window.set_focus();
     }
+}
+
+/// Check for updates when triggered from the tray menu.
+///
+/// Spawns an async task to check for updates and emits events with the result.
+/// Opens the settings window to show the update UI.
+///
+/// # Arguments
+///
+/// * `app` - The Tauri AppHandle
+fn check_for_updates_from_tray(app: tauri::AppHandle) {
+    // Open settings window to show update progress
+    open_settings_window(&app);
+
+    // Spawn async update check
+    tauri::async_runtime::spawn(async move {
+        match app.updater() {
+            Ok(updater) => match updater.check().await {
+                Ok(Some(update)) => {
+                    let _ = app.emit(
+                        "update-available",
+                        serde_json::json!({
+                            "version": update.version,
+                            "body": update.body,
+                        }),
+                    );
+                }
+                Ok(None) => {
+                    let _ = app.emit("update-not-available", ());
+                }
+                Err(e) => {
+                    let _ = app.emit("update-error", e.to_string());
+                }
+            },
+            Err(e) => {
+                let _ = app.emit("update-error", e.to_string());
+            }
+        }
+    });
 }

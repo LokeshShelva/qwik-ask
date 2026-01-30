@@ -185,7 +185,7 @@ mod tests {
         let settings = AppSettings::default();
 
         // General defaults
-        assert!(!settings.general.auto_startup);
+        assert!(settings.general.auto_startup);
         assert!(matches!(settings.general.theme, Theme::Dark));
 
         // Shortcut defaults

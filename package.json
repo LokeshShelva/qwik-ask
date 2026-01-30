@@ -10,7 +10,9 @@
         "tauri": "tauri",
         "test": "vitest",
         "test:run": "vitest run",
-        "release": "release-it"
+        "test:rust": "cd src-tauri && cargo test",
+        "test:all": "yarn test:run && yarn test:rust",
+        "release": "yarn test:all && release-it"
     },
     "dependencies": {
         "@tauri-apps/api": "^2",

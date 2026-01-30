@@ -9,6 +9,11 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { ref, computed, nextTick } from 'vue';
 import ChatView from '../../views/ChatView.vue';
 
+// Mock Tauri APIs
+vi.mock('@tauri-apps/api/core', () => ({
+    invoke: vi.fn(() => Promise.resolve(null)),
+}));
+
 // Mock composables
 const mockMessages = ref<any[]>([]);
 const mockIsStreaming = ref(false);
@@ -45,6 +50,13 @@ vi.mock('../../composables/useSettings', () => ({
     useSettings: () => ({
         settings: mockSettings,
         loadSettings: vi.fn(),
+    }),
+}));
+
+vi.mock('../../composables/useUpdater', () => ({
+    useUpdater: () => ({
+        isUpdateAvailable: ref(false),
+        checkForUpdatesIfNeeded: vi.fn(),
     }),
 }));
 

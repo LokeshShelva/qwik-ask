@@ -19,9 +19,15 @@ const mockGetCurrentWindow = vi.fn(() => ({
     minimize: vi.fn(),
     hide: vi.fn(),
     onCloseRequested: vi.fn(() => Promise.resolve(() => { })),
+    onFocusChanged: vi.fn(() => Promise.resolve(() => { })),
 }));
 vi.mock('@tauri-apps/api/window', () => ({
     getCurrentWindow: () => mockGetCurrentWindow(),
+}));
+
+// Mock Tauri event API
+vi.mock('@tauri-apps/api/event', () => ({
+    listen: vi.fn(() => Promise.resolve(() => { })),
 }));
 
 // Mock useTheme composable
@@ -42,6 +48,8 @@ describe('SettingsView', () => {
         mockInvoke.mockImplementation((cmd: string) => {
             if (cmd === 'get_settings') return Promise.resolve({ ...DEFAULT_SETTINGS });
             if (cmd === 'get_auto_startup_status') return Promise.resolve(false);
+            if (cmd === 'get_current_version') return Promise.resolve('0.1.0');
+            if (cmd === 'check_for_updates') return Promise.resolve({ status: 'UpToDate' });
             return Promise.resolve();
         });
     });
@@ -75,7 +83,12 @@ describe('SettingsView', () => {
         });
 
         it('shows error state on load failure', async () => {
-            mockInvoke.mockRejectedValueOnce(new Error('Load failed'));
+            mockInvoke.mockImplementation((cmd: string) => {
+                if (cmd === 'get_settings') return Promise.reject(new Error('Load failed'));
+                if (cmd === 'get_current_version') return Promise.resolve('0.1.0');
+                if (cmd === 'check_for_updates') return Promise.resolve({ status: 'UpToDate' });
+                return Promise.resolve();
+            });
 
             const wrapper = mount(SettingsView, {
                 global: { stubs: { ShortcutRecorder: true } },

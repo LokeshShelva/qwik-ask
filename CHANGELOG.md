@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.1.3](https://github.com/LokeshShelva/qwik-ask/compare/v0.1.2...v0.1.3) (2026-01-30)
+
+
+### Features
+
+* **chat:** focus on the chat input everytime we enter the chat window ([a7b532d](https://github.com/LokeshShelva/qwik-ask/commit/a7b532d7ecfc77507a597e230622a62aa0a4963e))
+
 ## [0.1.2](https://github.com/LokeshShelva/qwik-ask/compare/v0.1.1...v0.1.2) (2026-01-29)
 
 

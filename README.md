@@ -47,12 +47,12 @@ The code might not be the absolute fastest or cleanest thing in the universe (pl
 
 ## The Plan (Maybe?)
 Here is what I *might* do next. (I make no promises. This was built for me, remember?)
-- [ ] Add support for more LLMs (OpenAI, Anthropic, etc.) - currently Gemini only.
-- [ ] Fix the inevitable bugs. 🐛
+- [x] ~~Add support for more LLMs (OpenAI, Anthropic, etc.) - currently Gemini only.~~ *Done! We're multi-model now. Fancy.* ✨
+- [ ] Fix the inevitable bugs. 🐛 *(They're features until someone reports them)*
 - [ ] Polish. Shiny things are nice.
-- [ ] Official Release.
-- [ ] Build for MacOS and Linux.
-- [ ] Optimize.
+- [ ] Official Release. *(Kinda done? The app exists. But Windows and Mac are screaming about unsigned builds. Need to sign things so they stop yelling at you.)*
+- [x] ~~Build for MacOS and Linux.~~ *Done! World domination incoming.* 🌍
+- [ ] Optimize. *(It's fast enough... right?)*
 
 *Note: I may or may not get around to doing any of this.* 🤷‍♂️
 

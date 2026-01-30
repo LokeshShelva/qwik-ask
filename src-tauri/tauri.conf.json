@@ -82,7 +82,7 @@
       ]
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU3RjlFRkVGQURDNDE1NjAKUldSZ0ZjU3Q3Ky81VndEaDVrMGhHZDNTLzV1bnVUVDRMSGNIc2R4UU5HS1AzWHVaQjBKYjZJYTAK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg4MjA2MEJCNTA5MzdGOTEKUldTUmY1TlF1MkFnaU1nSkMvV1J5d0l5eVRLTXcxNWx6OWpHSmw1YVFWLzBpdTRwd2U0R1IxMTIK",
       "endpoints": [
         "https://github.com/LokeshShelva/qwik-ask/releases/latest/download/latest.json"
       ],

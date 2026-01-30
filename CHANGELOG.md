@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.1.4](https://github.com/LokeshShelva/qwik-ask/compare/v0.1.3...v0.1.4) (2026-01-30)
+
+
+### Features
+
+* add builds for mac windows and linux arm systems ([9bd54e4](https://github.com/LokeshShelva/qwik-ask/commit/9bd54e4b4accb48db9d21944f2a4ca86728a1521))
+* Add icon in chat window when update available and add link to github release for updates in settings ([97a790d](https://github.com/LokeshShelva/qwik-ask/commit/97a790d5fb240b5b7473581973480ec3319f440e))
+
 ## [0.1.3](https://github.com/LokeshShelva/qwik-ask/compare/v0.1.2...v0.1.3) (2026-01-30)
 
 

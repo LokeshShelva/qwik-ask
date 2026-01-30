@@ -41,6 +41,10 @@ let unlistenSystemTheme: (() => void) | null = null;
 
 // --- Actions ---
 
+const focusInput = () => {
+    inputEl.value?.focus();
+}
+
 const openSettings = async () => {
   await invoke('open_settings');
 };
@@ -48,6 +52,7 @@ const openSettings = async () => {
 const toggleHistoryPanel = async () => {
   if (historyOpen.value) {
     closeHistory();
+    focusInput();
   } else {
     await openHistory();
   }
@@ -57,6 +62,7 @@ const handleNewChat = () => {
   resetChat();
   inputQuery.value = '';
   closeHistory();
+  focusInput();
   nextTick(() => {
     inputEl.value?.focus();
   });
@@ -70,6 +76,7 @@ const handleHistorySelect = async (conversationId: string) => {
 
 const handleHistoryClose = () => {
   closeHistory();
+  focusInput();
 };
 
 const handleSubmit = async () => {
@@ -122,6 +129,7 @@ useKeyboardShortcuts({
       handler: async () => {
         if (historyOpen.value) {
           closeHistory();
+          focusInput();
           return;
         }
         resetChat();

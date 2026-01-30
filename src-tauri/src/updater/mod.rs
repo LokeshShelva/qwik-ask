@@ -24,10 +24,6 @@ use tauri_plugin_updater::UpdaterExt;
 pub struct UpdateInfo {
     /// The new version available
     pub version: String,
-    /// Release notes/changelog (if available)
-    pub body: Option<String>,
-    /// Release date (if available)
-    pub date: Option<String>,
 }
 
 /// Result of checking for updates.
@@ -65,8 +61,6 @@ pub async fn check_for_updates(app: tauri::AppHandle) -> UpdateCheckResult {
     match updater.check().await {
         Ok(Some(update)) => UpdateCheckResult::Available(UpdateInfo {
             version: update.version.clone(),
-            body: update.body.clone(),
-            date: update.date.map(|d| d.to_string()),
         }),
         Ok(None) => UpdateCheckResult::UpToDate,
         Err(e) => UpdateCheckResult::Error(format!("Failed to check for updates: {}", e)),

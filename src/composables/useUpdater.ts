@@ -19,8 +19,6 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 /** Information about an available update */
 export interface UpdateInfo {
   version: string
-  body: string | null
-  date: string | null
 }
 
 /** Possible update check results */
@@ -39,6 +37,12 @@ export type UpdateStatus =
   | 'installing'
   | 'ready-to-restart'
   | 'error'
+
+/** Throttle duration for update checks (5 minutes in milliseconds) */
+const CHECK_THROTTLE_MS = 5 * 60 * 1000
+
+/** Module-level timestamp of last update check (shared across instances in same window) */
+let lastCheckTimestamp = 0
 
 export function useUpdater() {
   // Reactive state
@@ -78,6 +82,7 @@ export function useUpdater() {
     status.value = 'checking'
     errorMessage.value = null
     updateInfo.value = null
+    lastCheckTimestamp = Date.now()
 
     try {
       const result = await invoke<UpdateCheckResult>('check_for_updates')
@@ -98,6 +103,24 @@ export function useUpdater() {
     } catch (e) {
       status.value = 'error'
       errorMessage.value = e instanceof Error ? e.message : String(e)
+    }
+  }
+
+  /**
+   * Check for updates if not checked recently (respects throttle).
+   * 
+   * Only performs check if more than 5 minutes since last check,
+   * unless an update is already available or currently checking.
+   */
+  async function checkForUpdatesIfNeeded() {
+    // Skip if already checking or update available
+    if (status.value === 'checking' || status.value === 'available') {
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastCheckTimestamp >= CHECK_THROTTLE_MS) {
+      await checkForUpdates()
     }
   }
 
@@ -162,14 +185,12 @@ export function useUpdater() {
     unlisteners.push(finishedUnlisten)
 
     // Update available (from tray menu check)
-    const availableUnlisten = await listen<{ version: string; body: string | null }>(
+    const availableUnlisten = await listen<{ version: string }>(
       'update-available',
       (event) => {
         status.value = 'available'
         updateInfo.value = {
           version: event.payload.version,
-          body: event.payload.body,
-          date: null,
         }
       }
     )
@@ -222,6 +243,7 @@ export function useUpdater() {
 
     // Methods
     checkForUpdates,
+    checkForUpdatesIfNeeded,
     installUpdate,
     restartApp,
     resetStatus,

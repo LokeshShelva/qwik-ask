@@ -641,16 +641,16 @@ body,
   font-size: 13px;
 }
 
-.update-notes {
+.update-link {
   font-size: 12px;
-  color: var(--text-secondary);
-  margin: 4px 0 8px 0;
-  padding: 8px;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  max-height: 80px;
-  overflow-y: auto;
-  white-space: pre-wrap;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.update-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .update-up-to-date svg,

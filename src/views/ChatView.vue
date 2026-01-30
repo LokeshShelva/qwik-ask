@@ -3,11 +3,13 @@ import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import SettingsIcon from '../components/icons/SettingsIcon.vue';
 import HistoryIcon from '../components/icons/HistoryIcon.vue';
+import InfoIcon from '../components/icons/InfoIcon.vue';
 import ChatMessage from '../components/ChatMessage.vue';
 import HistoryPanel from '../components/HistoryPanel.vue';
 import { useChat } from '../composables/useChat';
 import { useHistory } from '../composables/useHistory';
 import { useSettings } from '../composables/useSettings';
+import { useUpdater } from '../composables/useUpdater';
 import { useWindowResize } from '../composables/useWindowResize';
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts';
 import { applyThemeFromSettings, setupSystemThemeListener } from '../composables/useTheme';
@@ -30,6 +32,7 @@ const is_dev = ref<boolean>(false)
 const { settings, loadSettings } = useSettings();
 const { messages, isStreaming, streamError, hasMessages, sendMessage, resetChat, loadConversation } = useChat();
 const { historyOpen, openHistory, closeHistory } = useHistory();
+const { isUpdateAvailable, checkForUpdatesIfNeeded } = useUpdater();
 
 // Computed states
 const apiKeyMissing = computed(() => !settings.value?.llm?.api_key);
@@ -193,6 +196,8 @@ onMounted(async () => {
         applyThemeFromSettings(settings.value.general.theme);
       }
       inputEl.value.focus();
+      // Check for updates on focus (with throttling)
+      await checkForUpdatesIfNeeded();
     } else {
       closeHistory();
       resetChat();
@@ -200,6 +205,9 @@ onMounted(async () => {
       await hide();
     }
   });
+
+  // Initial check for updates
+  await checkForUpdatesIfNeeded();
 });
 
 onUnmounted(() => {
@@ -287,8 +295,16 @@ onUnmounted(() => {
           <span class="hint"><kbd>Ctrl</kbd> <kbd>H</kbd> History</span>
           <span class="hint"><kbd>Ctrl</kbd> <kbd>K</kbd> Settings</span>
         </div>
-        <div v-if="is_dev" class="dev-note">
-          dev
+        <div class="footer-right">
+          <span v-if="is_dev" class="dev-note">dev</span>
+          <button
+            v-if="isUpdateAvailable"
+            class="update-indicator"
+            title="Update available"
+            @click="openSettings"
+          >
+            <InfoIcon :size="14" />
+          </button>
         </div>
       </footer>
   </div>

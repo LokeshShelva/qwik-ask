@@ -30,12 +30,14 @@ const {
   isReadyToRestart,
   hasError: hasUpdateError,
   checkForUpdates,
+  checkForUpdatesIfNeeded,
   installUpdate,
   restartApp,
   resetStatus: resetUpdateStatus,
 } = useUpdater();
 
 let unlistenClose: (() => void) | null = null;
+let unlistenFocus: (() => void) | null = null;
 let unlistenSystemTheme: (() => void) | null = null;
 
 // Window controls
@@ -295,10 +297,21 @@ onMounted(async () => {
     event.preventDefault();
     await settingsWindow.hide();
   });
+
+  // Check for updates on focus (with throttling)
+  unlistenFocus = await settingsWindow.onFocusChanged(async ({ payload: focused }) => {
+    if (focused) {
+      await checkForUpdatesIfNeeded();
+    }
+  });
+
+  // Initial check for updates
+  await checkForUpdatesIfNeeded();
 });
 
 onUnmounted(() => {
   if (unlistenClose) unlistenClose();
+  if (unlistenFocus) unlistenFocus();
   if (unlistenSystemTheme) unlistenSystemTheme();
 });
 </script>
@@ -607,7 +620,13 @@ onUnmounted(() => {
                 <div v-else-if="isUpdateAvailable && updateInfo" class="update-available">
                   <div class="update-available-info">
                     <strong>Update available: v{{ updateInfo.version }}</strong>
-                    <p v-if="updateInfo.body" class="update-notes">{{ updateInfo.body }}</p>
+                    <a 
+                      href="https://github.com/LokeshShelva/qwik-ask/releases/latest" 
+                      target="_blank"
+                      class="update-link"
+                    >
+                      View release on GitHub →
+                    </a>
                   </div>
                   <button @click="installUpdate" class="btn-primary">
                     Download & Install

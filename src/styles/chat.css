@@ -244,8 +244,43 @@ body,
     gap: 16px;
 }
 
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .dev-note {
     color: var(--text-muted)
+}
+
+.update-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.update-indicator:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
 }
 
 .hint {
